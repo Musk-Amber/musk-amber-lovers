@@ -1,0 +1,2394 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog | Musk & Amber</title>
+    <link rel="shortcut icon" type="image/x-icon" href="./WhatsApp_Image_2025-11-25_at_15.35.57-removebg-preview.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary: #3e1b2a;
+            --secondary: #561e4b;
+            --accent: #868d7d;
+            --light: #f8f5f2;
+            --dark: #2c2c2c;
+            --gray: #95a5a6;
+            --success: #27ae60;
+        }
+
+        body {
+            background-color: #fefefe;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Header Styles */
+        header {
+            background-color: white;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-top {
+            background-color: var(--primary);
+            color: white;
+            padding: 10px 0;
+        }
+
+        .header-top-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .header-contact {
+            font-size: 14px;
+            margin-right: 20px;
+        }
+
+        .header-contact i {
+            margin-right: 5px;
+        }
+
+        .header-social {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header-social a {
+            color: white;
+            font-size: 14px;
+        }
+
+        .header-social a:hover {
+            color: var(--accent);
+        }
+
+        .logo-container {
+            text-align: center;
+            padding: 20px 0;
+            position: relative;
+        }
+
+        .logo-wrapper {
+            display: inline-block;
+            position: relative;
+        }
+
+        /* UPDATED: Larger logo sizes */
+        .logo-circle {
+            width: 150px; /* Increased from 120px */
+            height: 150px; /* Increased from 120px */
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            box-shadow: 0 5px 20px rgba(86, 30, 75, 0.3);
+            border: 5px solid white;
+            position: relative;
+            z-index: 2;
+        }
+
+        .logo-img {
+            width: 150px; /* Increased from 80px */
+            height: 150px; /* Increased from 80px */
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid white;
+        }
+
+        .logo-text {
+            font-size: 32px; /* Increased from 28px */
+            font-weight: 700;
+            color: var(--primary);
+            letter-spacing: 1px;
+        }
+
+        .logo-text span {
+            color: var(--secondary);
+        }
+
+        /* Main Navigation */
+        .main-nav {
+            background-color: var(--light);
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0;
+            position: relative;
+        }
+
+        /* Desktop Navigation */
+        .desktop-nav {
+            display: flex;
+        }
+
+        .desktop-nav ul {
+            display: flex;
+            list-style: none;
+        }
+
+        .desktop-nav ul li {
+            position: relative;
+        }
+
+        .desktop-nav ul li a {
+            text-decoration: none;
+            color: var(--dark);
+            font-weight: 600;
+            transition: all 0.3s;
+            padding: 20px 25px;
+            display: block;
+            text-transform: uppercase;
+            font-size: 14px;
+            letter-spacing: 0.5px;
+        }
+
+        .desktop-nav ul li a:hover {
+            color: var(--secondary);
+            background-color: rgba(86, 30, 75, 0.05);
+        }
+
+        .desktop-nav a.active {
+            color: var(--secondary);
+            background-color: rgba(86, 30, 75, 0.1);
+        }
+
+        /* Dropdown Menu */
+        .dropdown {
+            position: relative;
+        }
+
+        .dropdown-content {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background-color: white;
+            min-width: 220px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            border-radius: 5px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+            z-index: 1000;
+            padding: 10px 0;
+        }
+
+        .dropdown:hover .dropdown-content {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .dropdown-content a {
+            color: var(--dark);
+            padding: 12px 20px;
+            text-decoration: none;
+            display: block;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+            text-transform: none;
+        }
+
+        .dropdown-content a:hover {
+            background-color: var(--light);
+            color: var(--secondary);
+            border-left: 3px solid var(--secondary);
+        }
+
+        .dropdown-content a i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Mobile Navigation */
+        .mobile-nav {
+            display: none;
+        }
+
+        .hamburger-menu {
+            font-size: 24px;
+            color: var(--dark);
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .mobile-menu {
+            position: fixed;
+            top: 0;
+            left: -100%;
+            width: 80%;
+            max-width: 300px;
+            height: 100vh;
+            background-color: white;
+            box-shadow: 2px 0 15px rgba(0, 0, 0, 0.1);
+            transition: left 0.3s ease;
+            z-index: 1000;
+            padding: 70px 20px 20px;
+        }
+
+        .mobile-menu.active {
+            left: 0;
+        }
+
+        .mobile-menu ul {
+            list-style: none;
+        }
+
+        .mobile-menu ul li {
+            margin-bottom: 10px;
+        }
+
+        .mobile-menu ul li a {
+            text-decoration: none;
+            color: var(--dark);
+            font-size: 16px;
+            font-weight: 500;
+            display: block;
+            padding: 12px;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+
+        .mobile-menu ul li a:hover {
+            background-color: var(--light);
+            color: var(--secondary);
+        }
+
+        .menu-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            display: none;
+        }
+
+        .menu-overlay.active {
+            display: block;
+        }
+
+        .close-menu {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 24px;
+            color: var(--dark);
+            cursor: pointer;
+        }
+
+        .cart-icon {
+            position: fixed;
+            top: 200px;
+            right: 20px;
+            background-color: var(--secondary);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(86, 30, 75, 0.3);
+            z-index: 99;
+            transition: transform 0.3s;
+        }
+
+        .cart-icon:hover {
+            transform: scale(1.1);
+        }
+
+        .cart-count {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: var(--primary);
+            color: white;
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            font-size: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+        }
+
+        .cart-sidebar {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 100%;
+            max-width: 400px;
+            height: 100vh;
+            background-color: white;
+            box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+            transition: right 0.3s ease;
+            z-index: 1001;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .cart-sidebar.active {
+            right: 0;
+        }
+
+        .cart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .cart-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .close-cart {
+            font-size: 22px;
+            color: var(--dark);
+            cursor: pointer;
+        }
+
+        .cart-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .cart-items {
+            margin-bottom: 20px;
+        }
+
+        .cart-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .cart-item-image {
+            width: 80px;
+            height: 80px;
+            background-size: cover;
+            background-position: center;
+            border-radius: 4px;
+            margin-right: 15px;
+        }
+
+        .cart-item-details {
+            flex: 1;
+        }
+
+        .cart-item-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .cart-item-price {
+            color: var(--secondary);
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        /* Size Options Styles */
+        .cart-item-size {
+            margin-bottom: 10px;
+        }
+
+        .size-options {
+            display: flex;
+            gap: 10px;
+            margin-top: 5px;
+        }
+
+        .size-option {
+            padding: 5px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .size-option:hover {
+            border-color: var(--secondary);
+            color: var(--secondary);
+        }
+
+        .size-option.selected {
+            background-color: var(--secondary);
+            color: white;
+            border-color: var(--secondary);
+        }
+
+        .cart-item-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .quantity-btn {
+            width: 30px;
+            height: 30px;
+            background-color: var(--light);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .quantity-btn:hover {
+            background-color: #ddd;
+        }
+
+        .cart-item-quantity {
+            font-weight: 600;
+            min-width: 30px;
+            text-align: center;
+        }
+
+        .remove-item {
+            color: var(--secondary);
+            background: none;
+            border: none;
+            cursor: pointer;
+            margin-left: auto;
+        }
+
+        .cart-footer {
+            padding: 20px;
+            border-top: 1px solid #eee;
+            background-color: #f9f9f9;
+        }
+
+        .cart-total {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .checkout-btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background-color: var(--secondary);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .checkout-btn:hover {
+            background-color: var(--primary);
+        }
+
+        .empty-cart {
+            text-align: center;
+            padding: 40px 0;
+            color: var(--gray);
+        }
+
+        .empty-cart i {
+            font-size: 48px;
+            margin-bottom: 15px;
+            color: #ddd;
+        }
+
+    
+
+        .hero-content {
+            position: relative;
+            z-index: 3;
+            width: 100%;
+            text-align: center;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .blog-hero h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: white;
+            line-height: 1.2;
+        }
+
+        .blog-hero p {
+            font-size: 18px;
+            margin-bottom: 30px;
+            color: rgba(255, 255, 255, 0.9);
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Blog Section */
+        .blog-section {
+            padding: 60px 0 80px;
+            background-color: var(--light);
+        }
+
+        .section-title {
+            text-align: center;
+            margin-bottom: 60px;
+            color: var(--primary);
+            font-size: 36px;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            width: 80px;
+            height: 3px;
+            background-color: var(--secondary);
+            bottom: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        /* Blog FAQ Accordion */
+        .blog-accordion {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .blog-item {
+            background-color: white;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            border: 1px solid #eee;
+            transition: all 0.3s ease;
+        }
+
+        .blog-item.active {
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border-color: var(--secondary);
+        }
+
+        .blog-header {
+            padding: 25px 30px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: white;
+            transition: background-color 0.3s;
+        }
+
+        .blog-item.active .blog-header {
+            background-color: rgba(86, 30, 75, 0.05);
+        }
+
+        .blog-header:hover {
+            background-color: rgba(86, 30, 75, 0.03);
+        }
+
+        .blog-header-content {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex: 1;
+        }
+
+        .blog-number {
+            width: 40px;
+            height: 40px;
+            background-color: var(--secondary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .blog-title-info {
+            flex: 1;
+        }
+
+        .blog-title {
+            font-size: 20px;
+            color: var(--primary);
+            margin-bottom: 8px;
+            line-height: 1.4;
+            font-weight: 600;
+        }
+
+        .blog-meta {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 14px;
+            color: var(--gray);
+        }
+
+        .blog-category {
+            background-color: var(--light);
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .blog-toggle {
+            color: var(--secondary);
+            font-size: 20px;
+            transition: transform 0.3s;
+        }
+
+        .blog-item.active .blog-toggle {
+            transform: rotate(180deg);
+        }
+
+        .blog-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease;
+        }
+
+        .blog-content-inner {
+            padding: 0 30px 30px;
+            opacity: 0;
+            transition: opacity 0.3s ease 0.2s;
+        }
+
+        .blog-item.active .blog-content-inner {
+            opacity: 1;
+        }
+
+        .blog-image {
+            width: 100%;
+            height: 300px;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 25px;
+        }
+
+        .blog-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s;
+        }
+
+        .blog-image:hover img {
+            transform: scale(1.05);
+        }
+
+        .blog-full-content {
+            font-size: 16px;
+            line-height: 1.8;
+            color: #555;
+        }
+
+        .blog-full-content p {
+            margin-bottom: 20px;
+        }
+
+        .blog-full-content h3 {
+            color: var(--primary);
+            margin: 25px 0 15px;
+            font-size: 22px;
+        }
+
+        .blog-full-content ul {
+            margin-left: 20px;
+            margin-bottom: 20px;
+        }
+
+        .blog-full-content li {
+            margin-bottom: 10px;
+        }
+
+        .blog-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+
+        .blog-tag {
+            background-color: var(--light);
+            color: var(--dark);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .blog-tag:hover {
+            background-color: var(--secondary);
+            color: white;
+        }
+
+        /* Newsletter */
+        .newsletter {
+            padding: 80px 0;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--dark) 100%);
+            color: white;
+            text-align: center;
+        }
+
+        .newsletter h2 {
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+
+        .newsletter p {
+            font-size: 18px;
+            margin-bottom: 30px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .newsletter-form {
+            display: flex;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .newsletter-input {
+            flex: 1;
+            padding: 15px 20px;
+            border: none;
+            border-radius: 30px 0 0 30px;
+            font-size: 16px;
+            outline: none;
+        }
+
+        .newsletter-button {
+            padding: 15px 30px;
+            background-color: var(--secondary);
+            color: white;
+            border: none;
+            border-radius: 0 30px 30px 0;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .newsletter-button:hover {
+            background-color: var(--accent);
+        }
+
+        /* Footer */
+        footer {
+            background-color: var(--dark);
+            color: white;
+            padding: 60px 0 30px;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .footer-column h3 {
+            font-size: 20px;
+            margin-bottom: 20px;
+            position: relative;
+            padding-bottom: 10px;
+        }
+
+        .footer-column h3::after {
+            content: '';
+            position: absolute;
+            width: 40px;
+            height: 2px;
+            background-color: var(--secondary);
+            bottom: 0;
+            left: 0;
+        }
+
+        .footer-column ul {
+            list-style: none;
+        }
+
+        .footer-column ul li {
+            margin-bottom: 10px;
+        }
+
+        .footer-column ul li a {
+            color: #bbb;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer-column ul li a:hover {
+            color: white;
+        }
+
+        .social-icons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .social-icons a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            color: white;
+            transition: background-color 0.3s;
+        }
+
+        .social-icons a:hover {
+            background-color: var(--secondary);
+        }
+
+        .copyright {
+            text-align: center;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #bbb;
+            font-size: 14px;
+        }
+
+        /* Checkout Form */
+        .checkout-form-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1002;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .checkout-form-overlay.active {
+            display: flex;
+        }
+
+        .checkout-form-container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .checkout-form-title {
+            margin-bottom: 20px;
+            color: var(--primary);
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        .form-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+        }
+
+        .submit-order,
+        .cancel-order {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .submit-order {
+            background-color: var(--secondary);
+            color: white;
+        }
+
+        .submit-order:hover {
+            background-color: var(--primary);
+        }
+
+        .cancel-order {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .cancel-order:hover {
+            background-color: #c0392b;
+        }
+
+        /* Notifications */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 5px;
+            color: white;
+            font-weight: 500;
+            z-index: 9999;
+            animation: slideIn 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .notification.success {
+            background-color: var(--success);
+        }
+
+        .notification.error {
+            background-color: #e74c3c;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 992px) {
+            .dropdown-content {
+                position: static;
+                opacity: 1;
+                visibility: visible;
+                transform: none;
+                box-shadow: none;
+                padding-left: 20px;
+                display: none;
+            }
+            
+            .dropdown.active .dropdown-content {
+                display: block;
+            }
+            
+            .blog-header {
+                padding: 20px;
+            }
+            
+            .blog-title {
+                font-size: 18px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header-top {
+                padding: 10px 0;
+            }
+
+            .header-top-content {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+            }
+
+            .header-contact {
+                text-align: center;
+                margin-right: 0;
+                margin-bottom: 5px;
+            }
+
+            .header-social {
+                justify-content: center;
+                margin-bottom: 10px;
+            }
+
+            .logo-container {
+                padding: 15px 0;
+                position: relative;
+            }
+
+            /* UPDATED: Larger logo for mobile */
+            .logo-circle {
+                width: 150px; /* Keep large size for mobile */
+                height: 150px; /* Keep large size for mobile */
+                margin-top: 10px;
+            }
+
+            .logo-img {
+                width: 150px; /* Keep large size for mobile */
+                height: 150px; /* Keep large size for mobile */
+            }
+
+            .logo-text {
+                font-size: 32px; /* Increased font size for mobile */
+                margin-top: 10px;
+            }
+
+            .desktop-nav {
+                display: none;
+            }
+
+            .mobile-nav {
+                display: block;
+                position: absolute;
+                top: 20px; /* Adjusted position */
+                left: 20px;
+                transform: none;
+                z-index: 100;
+            }
+
+            .mobile-nav .hamburger-menu {
+                font-size: 28px;
+                color: var(--primary);
+                background-color: var(--light);
+                padding: 10px;
+                border-radius: 5px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            }
+
+            .cart-icon {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                width: 45px;
+                height: 45px;
+                font-size: 20px;
+                z-index: 101;
+            }
+
+            .cart-count {
+                width: 20px;
+                height: 20px;
+                font-size: 11px;
+            }
+
+            .main-nav {
+                display: none;
+            }
+
+            .blog-hero {
+                height: auto;
+                min-height: 250px;
+                margin-top: 20px;
+            }
+
+            .blog-hero h1 {
+                font-size: 32px;
+            }
+
+            .blog-hero p {
+                font-size: 16px;
+            }
+
+            .section-title {
+                font-size: 30px;
+            }
+
+            .blog-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .blog-header-content {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+                width: 100%;
+            }
+
+            .blog-title-info {
+                width: 100%;
+            }
+
+            .blog-toggle {
+                align-self: flex-end;
+                margin-top: 15px;
+            }
+
+            .blog-image {
+                height: 200px;
+            }
+
+            .blog-content-inner {
+                padding: 0 20px 20px;
+            }
+
+            .newsletter-form {
+                flex-direction: column;
+            }
+
+            .newsletter-input {
+                border-radius: 30px;
+                margin-bottom: 10px;
+            }
+
+            .newsletter-button {
+                border-radius: 30px;
+            }
+            
+            /* Mobile Menu Styles */
+            .mobile-menu {
+                position: fixed;
+                top: 0;
+                left: -100%;
+                width: 80%;
+                max-width: 300px;
+                height: 100vh;
+                background-color: white;
+                box-shadow: 2px 0 15px rgba(0, 0, 0, 0.1);
+                transition: left 0.3s ease;
+                z-index: 1000;
+                padding: 70px 20px 20px;
+            }
+
+            .mobile-menu.active {
+                left: 0;
+            }
+
+            .mobile-menu ul {
+                list-style: none;
+            }
+
+            .mobile-menu ul li {
+                margin-bottom: 10px;
+            }
+
+            .mobile-menu ul li a {
+                text-decoration: none;
+                color: var(--dark);
+                font-size: 16px;
+                font-weight: 500;
+                display: block;
+                padding: 12px;
+                border-radius: 4px;
+                transition: background-color 0.3s;
+            }
+
+            .mobile-menu ul li a:hover {
+                background-color: var(--light);
+                color: var(--secondary);
+            }
+
+            .menu-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.5);
+                z-index: 999;
+                display: none;
+            }
+
+            .menu-overlay.active {
+                display: block;
+            }
+
+            .close-menu {
+                position: absolute;
+                top: 20px;
+                right: 20px;
+                font-size: 24px;
+                color: var(--dark);
+                cursor: pointer;
+                z-index: 1001;
+            }
+
+            .form-buttons {
+                flex-direction: column;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .logo-text {
+                font-size: 28px; /* Adjusted for very small screens */
+            }
+
+            .blog-hero h1 {
+                font-size: 26px;
+            }
+
+            .blog-number {
+                width: 35px;
+                height: 35px;
+                font-size: 16px;
+            }
+
+            .blog-title {
+                font-size: 16px;
+            }
+
+            .blog-meta {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+
+            .blog-image {
+                height: 180px;
+            }
+
+            .footer-content {
+                grid-template-columns: 1fr;
+            }
+        }
+        /* Add to your existing CSS */
+        .mobile-menu ul li a i {
+            width: 20px;
+            text-align: center;
+            margin-right: 10px;
+        }
+
+        .mobile-menu ul li a:hover {
+            background-color: #f8f5f2;
+            color: #561e4b;
+        }
+
+        /* Promotion specific icon color */
+        .mobile-menu ul li a[onclick*="promotion"] i {
+            color: #ff9800;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header Top (Contact Info) -->
+    <div class="header-top">
+        <div class="container header-top-content">
+            <div class="header-contact">
+                <p>  Livraison disponible partout au Maroc, gratuite à partir de 1000dh | </p>
+                
+            </div>
+            <div class="header-social">
+            
+                <a href="https://www.instagram.com/musk_and_amber_lovers/"><i class="fab fa-instagram"></i></a>
+                <a href="https://www.tiktok.com/@muskwamber"><i class="fab fa-tiktok"></i></a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logo Section (Separated) -->
+    <div class="logo-container">
+        <!-- Mobile Hamburger Menu -->
+        <div class="mobile-nav">
+            <div class="hamburger-menu" id="hamburger-menu">
+                <i class="fas fa-bars"></i>
+            </div>
+        </div>
+
+        <div class="logo-wrapper">
+            <div class="logo-circle">
+                <img src="WhatsApp_Image_2025-11-25_at_15.35.57-removebg-preview.png" alt="Musk & Amber" class="logo-img">
+            </div>
+            <div class="logo-text">Musk<span> & Amber</span></div>
+        </div>
+    </div>
+
+    <!-- Main Navigation -->
+    <nav class="main-nav">
+        <div class="container nav-container">
+            <!-- Desktop Navigation -->
+            <div class="desktop-nav">
+                <ul>
+                    <li><a href="index.html">Accueil</a></li>
+                    <li><a href="Categories.html">Catégories</a></li>
+                    <li><a href="about.html">À propos de nous</a></li>
+                    <li><a href="blog.html" class="active">Blog</a></li>
+                    <li class="dropdown">
+                        <a href="nouveautés.html">Nouveautés <i class="fas fa-chevron-down"></i></a>
+                        <div class="dropdown-content">
+                            <a href="nouveautés.html"><i class="fas fa-female"></i> Parfums Femme</a>
+                            <a href="nouveautés.html"><i class="fas fa-male"></i> Parfums Homme</a>
+                            <a href="nouveautés.html"><i class="fas fa-mosque"></i> Parfums Arabes</a>
+                            <a href="nouveautés.html"><i class="fas fa-star"></i> Éditions Limitées</a>
+                            <a href="nouveautés.html"><i class="fas fa-gift"></i> Coffrets Cadeaux</a>
+                        </div>
+                    </li>
+                    
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu (Outside main nav) -->
+    <div class="mobile-menu" id="mobile-menu">
+        <div class="close-menu" id="close-menu">
+            <i class="fas fa-times"></i>
+        </div>
+        <ul>
+            <li><a href="index.html">Accueil</a></li>
+             <li><a href="javascript:void(0)" onclick="navigateToCategory('femme')">Parfums femme</a></li>
+            <li><a href="javascript:void(0)" onclick="navigateToCategory('homme')">Parfums homme</a></li>
+            <li><a href="javascript:void(0)" onclick="navigateToCategory('arabes')">Parfum arabes</a></li>
+            <li><a href="javascript:void(0)" onclick="navigateToCategory('niches')">Parfum de niche</a></li>
+            <li><a href="about.html">À propos de nous</a></li> 
+            <li><a href="blog.html" class="active">Blog</a></li>
+            <li><a href="nouveautés.html" id="mobile-nouveautes">Nouveautés </a></li>    
+              
+            
+            
+        </ul>
+    </div>
+    <div class="menu-overlay" id="menu-overlay"></div>
+
+    <!-- Cart Icon (Floating) -->
+    <div class="cart-icon" id="cart-icon">
+        <i class="fas fa-shopping-bag"></i>
+        <span class="cart-count">0</span>
+    </div>
+
+    <!-- Shopping Cart Sidebar -->
+    <div class="cart-sidebar" id="cart-sidebar">
+        <div class="cart-header">
+            <h2 class="cart-title">Votre panier</h2>
+            <div class="close-cart" id="close-cart">
+                <i class="fas fa-times"></i>
+            </div>
+        </div>
+        <div class="cart-content">
+            <div class="cart-items" id="cart-items">
+                <!-- Cart items will be dynamically loaded here -->
+            </div>
+        </div>
+        <div class="cart-footer">
+            <div class="cart-total">
+                <span>Total:</span>
+                <span id="cart-total-price">0.00 MAD</span>
+            </div>
+            <button class="checkout-btn" id="checkout-btn">Commander maintenant</button>
+        </div>
+    </div>
+    <div class="menu-overlay" id="cart-overlay"></div>
+
+    <!-- Checkout Form Overlay -->
+    <div class="checkout-form-overlay" id="checkout-form-overlay">
+        <div class="checkout-form-container">
+            <h2 class="checkout-form-title">Finaliser votre commande</h2>
+            <form id="checkout-form">
+                <div class="form-group">
+                    <label for="customer-name">Nom complet</label>
+                    <input type="text" id="customer-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="customer-phone">Numéro de téléphone</label>
+                    <input type="tel" id="customer-phone" required>
+                </div>
+                <div class="form-group">
+                    <label for="customer-address">Adresse de livraison</label>
+                    <textarea id="customer-address" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="customer-notes">Notes supplémentaires (optionnel)</label>
+                    <textarea id="customer-notes"></textarea>
+                </div>
+                <div class="form-buttons">
+                    <button type="submit" class="submit-order">Confirmer la commande</button>
+                    <button type="button" class="cancel-order" id="cancel-order">Annuler</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Blog Hero -->
+ 
+
+    <!-- Blog Section -->
+    <section class="blog-section">
+        <div class="container">
+            <h2 class="section-title">Articles du Blog</h2>
+            <div class="blog-accordion" id="blog-accordion">
+                <!-- Blog items will be generated by JavaScript -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Newsletter -->
+    <section class="newsletter">
+        <div class="container">
+            <h2>Ne manquez aucun article</h2>
+            <p>Abonnez-vous pour recevoir nos derniers articles de blog directement dans votre boîte email.</p>
+            <form class="newsletter-form" id="blog-newsletter-form">
+                <input type="email" class="newsletter-input" placeholder="Votre adresse email" required>
+                <button type="submit" class="newsletter-button">S'abonner</button>
+            </form>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>Musk & Amber</h3>
+                    <p>Votre destination pour des fragrances de luxe exceptionnelles qui éveillent les sens et expriment votre personnalité unique.</p>
+                    <div class="social-icons">
+                        
+                        <a href="https://www.instagram.com/musk_and_amber_lovers/"><i class="fab fa-instagram"></i></a>
+                        <a href="https://www.tiktok.com/@muskwamber"><i class="fab fa-tiktok"></i></a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h3>Liens rapides</h3>
+                    <ul>
+                        <li><a href="index.html">Accueil</a></li>
+                        <li><a href="javascript:void(0)" onclick="filterByCategory('arabes')">Parfum arabes</a></li>
+                        <li><a href="nouveautes.html">Nouveautés</a></li>
+                        <li><a href="blog.html">Blog</a></li>
+                        <li><a href="about.html">À propos</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Informations</h3>
+                    <ul>
+                        <li><a href="about.html">À propos de nous</a></li>
+                        <li><a href="Contact.html">Contact</a></li>
+                        <li><a href="blog.html">Blog</a></li>
+                        
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Contact</h3>
+                    <ul>
+                        <li><i class="fas fa-phone"></i>  0668313435 </li>
+                        
+                        <li><i class="fas fa-map-marker-alt"></i> Morocco</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2025 Musk & Amber. Tous droits réservés.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+      const firebaseConfig = {
+    apiKey: "AIzaSyDxHAlR86M1U_-sBdLtZ6nEh0ssUREQY5M",
+    authDomain: "muskandamber-83cd8.firebaseapp.com",
+    projectId: "muskandamber-83cd8",
+    storageBucket: "muskandamber-83cd8.firebasestorage.app",
+    messagingSenderId: "820622006518",
+    appId: "1:820622006518:web:540280c4c18f2e94ac74d7",
+    measurementId: "G-58WS7ZEYG3"
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+let cart = JSON.parse(localStorage.getItem('muskandamber-cart')) || [];
+
+// DOM Elements
+const cartIcon = document.getElementById('cart-icon');
+const cartCount = document.querySelector('.cart-count');
+const cartSidebar = document.getElementById('cart-sidebar');
+const closeCart = document.getElementById('close-cart');
+const cartItems = document.getElementById('cart-items');
+const cartTotalPrice = document.getElementById('cart-total-price');
+const checkoutBtn = document.getElementById('checkout-btn');
+const cartOverlay = document.getElementById('cart-overlay');
+const hamburgerMenu = document.getElementById('hamburger-menu');
+const mobileMenu = document.getElementById('mobile-menu');
+const closeMenu = document.getElementById('close-menu');
+const menuOverlay = document.getElementById('menu-overlay');
+const checkoutFormOverlay = document.getElementById('checkout-form-overlay');
+const checkoutForm = document.getElementById('checkout-form');
+const cancelOrderBtn = document.getElementById('cancel-order');
+const blogAccordion = document.getElementById('blog-accordion');
+const blogNewsletterForm = document.getElementById('blog-newsletter-form');
+
+// Blog data with full content
+const blogPosts = [
+    {
+        id: 1,
+        title: "L'Ambre : La chaleur envoûtante des fragrances",
+        image: "give me picture of ambre.jpg",
+        category: "Parfums Ambrés",
+        readTime: "5 min",
+        date: "08 Déc 2025",
+        fullContent: `
+            <h3>L'ambre, un voyage olfactif solaire</h3>
+            <p>On vous présente l'ambre en parfumerie, non pas comme une matière première mais comme un accord alchimique qui évoque la chaleur du soleil capturée dans une résine fossile. Cette création parfumée, souvent surnommée "l'or oriental", enveloppe la peau d'une aura mystérieuse et réconfortante. Parfait pour ceux qui cherchent une fragrance avec du caractère.</p>
+            
+            <h3>Les chefs-d'œuvre ambrés qu'on adore vous proposer</h3>
+            <div class="perfume-showcase">
+                <div class="perfume-item">
+                    <h4>Ambre Sultan – Serge Lutens ⭐⭐⭐⭐⭐</h4>
+                    <p>Une œuvre magistrale qu'on recommande chaleureusement ! L'ambre épicé y rencontre le santal et le patchouli. On le vend souvent aux clients qui cherchent un parfum qui raconte l'histoire des souks marocains à la tombée du jour.</p>
+                </div>
+                <div class="perfume-item">
+                    <h4>Grand Soir – Maison Francis Kurkdjian ⭐⭐⭐⭐⭐</h4>
+                    <p>L'élégance française qu'on adore proposer pour les grandes occasions. Imaginez une soirée parisienne, les lumières de la ville, la douceur de la nuit... C'est ce que vous offre ce parfum. On le conseille pour les événements spéciaux.</p>
+                </div>
+                <div class="perfume-item">
+                    <h4>L'Air du Désert Marocain – Tauer ⭐⭐⭐⭐⭐</h4>
+                    <p>Un best-seller dans notre boutique ! Andy Tauer capture l'essence même du désert : un ambre minéral, sec, brûlant. On le propose aux clients qui veulent voyager olfactivement vers des horizons lointains.</p>
+                </div>
+            </div>
+            
+            <h3>Pourquoi choisir un parfum ambré ?</h3>
+            <p>Si vous hésitez, voici pourquoi on pense qu'un parfum ambré pourrait vous convenir :</p>
+            <ul>
+                <li><strong>Longue tenue</strong> : Les parfums ambrés tiennent exceptionnellement bien sur la peau</li>
+                <li><strong>Polyvalent</strong> : Idéal pour l'automne et l'hiver, mais certaines versions plus légères peuvent se porter toute l'année</li>
+                <li><strong>Distingué</strong> : Crée une impression de confiance et de sophistication immédiate</li>
+                <li><strong>Confortable</strong> : Comme un pull douillet en parfum</li>
+            </ul>
+            
+            <h3>Comment on vous conseille de porter l'ambre ?</h3>
+            <p>Quand on vous vend un parfum ambré, on vous recommande de l'appliquer sur les points de pouls où il développera toute sa chaleur. C'est le compagnon idéal pour les soirées d'automne et d'hiver. Venez en boutique, on vous fera essayer plusieurs variations pour trouver celle qui vous correspond le mieux !</p>
+        `,
+        tags: ["ambre", "parfums orientaux", "chaleur", "collection hiver"]
+    },
+    {
+        id: 2,
+        title: "Le Musc : L'étoffe des parfums intimes",
+        image: "musc.jpeg",
+        category: "Parfums Musqués",
+        readTime: "4 min",
+        date: "08 Déc 2025",
+        fullContent: `
+            <h3>Le musc, deuxième peau olfactive</h3>
+            <p>Le musc qu'on vous propose n'est pas un parfum qu'on porte, c'est un parfum qui devient vous. C'est notre catégorie la plus demandée par ceux qui cherchent l'élégance discrète. Il épouse la peau, dialogue avec votre chimie naturelle, créant une fragrance unique à chaque porteur.</p>
+            
+            <h3>Best-sellers des parfums musqués</h3>
+            <div class="perfume-showcase">
+                <div class="perfume-item">
+                    <h4>Musk Therapy – Initio ⭐⭐⭐⭐⭐</h4>
+                    <p>Notre best-seller musqué ! Les clients adorent ce musc blanc, propre comme un drap frais, qui apporte une sensation de bien-être immédiat. On l'appelle souvent "le parfum-thérapie" tellement il fait du bien à porter.</p>
+                </div>
+                <div class="perfume-item">
+                    <h4>Pure Musk – Narciso Rodriguez ⭐⭐⭐⭐⭐</h4>
+                    <p>L'élégance minimaliste qu'on recommande aux clients modernes. Un musc qui respire la contemporanéité, entre fleur d'oranger et notes poudrées. Parfait pour le bureau ou les occasions où on veut être subtil.</p>
+                </div>
+                <div class="perfume-item">
+                    <h4>Musc Ravageur – Frédéric Malle ⭐⭐⭐⭐</h4>
+                    <p>Pour les audacieux ! Quand un client veut un musc qui ose, on lui propose celui-ci. Animal, vanillé, épicé. Une composition qu'on réserve aux personnalités affirmées.</p>
+                </div>
+            </div>
+            
+            <h3>Pourquoi acheter un parfum musqué ?</h3>
+            <p>En boutique, on explique toujours ces avantages du musc :</p>
+            <ul>
+                <li><strong>Discret mais présent</strong> : On ne le remarque pas immédiatement, mais on le sent toute la journée</li>
+                <li><strong>Évolue avec vous</strong> : Change légèrement selon votre peau, votre humeur, votre journée</li>
+                <li><strong>Facile à porter</strong> : Impossible de se tromper, même pour les débutants en parfumerie</li>
+                <li><strong>Mixte</strong> : Plait autant aux hommes qu'aux femmes</li>
+            </ul>
+            
+            <h3>Comment on vous conseille de porter le musc ?</h3>
+            <p>Contrairement aux idées reçues, le musc est parfaitement adapté à un port quotidien. On vous recommande de l'appliquer le matin après votre douche pour une fragrance qui vous suivra discrètement toute la journée. Venez tester plusieurs muscs en boutique, on vous guidera vers celui qui sublime le plus votre peau !</p>
+        `,
+        tags: ["musc", "sensualité", "parfums intimes", "peau nue"]
+    },
+    {
+        id: 3,
+        title: "Le Oud : La symphonie des bois précieux",
+        image: "give me picture of oud we use in perfume (1).jpg",
+        category: "Parfums Oud",
+        readTime: "5 min",
+        date: "08 Déc 2025",
+        fullContent: `
+            <h3>L'oud, l'expérience olfactive ultime</h3>
+            <p>L'oud qu'on vous propose n'est pas un simple parfum, c'est une expérience. C'est notre catégorie de luxe, pour les clients qui cherchent l'exceptionnel. Un parfum d'oud, c'est porter une histoire millénaire sur sa peau.</p>
+            
+            <h3>Les ouds qu'on a la chance de vous présenter</h3>
+            <div class="perfume-showcase">
+                <div class="perfume-item">
+                    <h4>Oud Satin Mood – Maison Francis Kurkdjian ⭐⭐⭐⭐⭐</h4>
+                    <p>Notre oud le plus vendu ! On l'appelle "l'oud en robe de soirée". Enveloppé de rose et de vanille, il devient d'une douceur inattendue. Parfait pour ceux qui veulent découvrir l'oud en douceur.</p>
+                </div>
+                <div class="perfume-item">
+                    <h4>Alexandria II – Xerjoff ⭐⭐⭐⭐⭐</h4>
+                    <p>Pour les collectionneurs ! Quand un client cherche un parfum d'exception, on lui présente celui-ci. L'oud y rencontre les épices de la route de la soie, créant un parfum épique, digne des empereurs.</p>
+                </div>
+                <div class="perfume-item">
+                    <h4>Sirène – Fragrance du Bois ⭐⭐⭐⭐⭐</h4>
+                    <p>L'innovation qu'on adore proposer ! L'oud marin, une création audacieuse où le bois précieux rencontre les notes iodées. Surprenant et magnifique, pour les clients qui cherchent l'originalité.</p>
+                </div>
+                <div class="perfume-item">
+                    <h4>Oud Aquilaria – Omanluxury ⭐⭐⭐⭐⭐</h4>
+                    <p>Pour les puristes ! La quintessence de l'oud pur. On le réserve aux connaisseurs qui veulent découvrir l'oud dans toute sa complexité : fumée, cuir, miel, bois brûlé.</p>
+                </div>
+            </div>
+            
+            <h3>Pourquoi investir dans un parfum à l'oud ?</h3>
+            <p>Quand on vous vend un parfum à l'oud, on vous explique :</p>
+            <ul>
+                <li><strong>Exceptionnel</strong> : Une fragrance qui se remarque et se souvient</li>
+                <li><strong>Tenue légendaire</strong> : Tient des jours sur les vêtements, des heures sur la peau</li>
+                <li><strong>Évolutif</strong> : Change tout au long de la journée, comme un bon vin qui s'aère</li>
+                <li><strong>Prestigieux</strong> : Instantanément élégant et sophistiqué</li>
+            </ul>
+            
+            <h3>Comment on vous conseille de porter l'oud ?</h3>
+            <p>L'oud est un parfum d'exception qu'on recommande de porter avec parcimonie. Une seule pulvérisation suffit généralement. On vous conseille de l'appliquer le matin, il se réveillera avec la chaleur de votre peau et évoluera magnifiquement tout au long de la journée. Venez en boutique, on vous fera découvrir la magie de l'oud !</p>
+        `,
+        tags: ["oud", "bois précieux", "luxe", "parfums d'exception"]
+    },
+    {
+        id: 4,
+        title: "La Rose : La poésie florale éternelle",
+        image: "rose.jpeg",
+        category: "Parfums Rosés",
+        readTime: "6 min",
+        date: "08 Déc 2025",
+        fullContent: `
+            <h3>La rose, la fleur qu'on adore vous proposer</h3>
+            <p>La rose qu'on vous vend n'est pas une simple fleur, c'est un univers. C'est notre catégorie la plus féminine, la plus demandée pour les cadeaux. De la rose fraîche du matin à la rose sombre du crépuscule, on a la version parfaite pour chaque client.</p>
+            
+            <h3>Les roses qu'on aime vous faire découvrir</h3>
+            <div class="perfume-showcase">
+                <div class="perfume-item">
+                    <h4>Portrait of a Lady – Frédéric Malle ⭐⭐⭐⭐⭐</h4>
+                    <p>Notre rose signature ! La rose dans toute sa majesté. Quand une cliente cherche un parfum qui fait "grande dame", on lui propose celui-ci. Puissante, aristocratique, inoubliable.</p>
+                </div>
+                <div class="perfume-item">
+                    <h4>Infusion de Rose – Prada ⭐⭐⭐⭐</h4>
+                    <p>La rose minimaliste qu'on recommande pour le quotidien. Légère, aqueuse, presque transparente. Comme une rose vue à travers la pluie d'avril. Parfaite pour le bureau.</p>
+                </div>
+                <div class="perfume-item">
+                    <h4>Fleur Majesty – Kayali ⭐⭐⭐⭐</h4>
+                    <p>Pour les jeunes clientes ! La rose moderne, juvénile, fruitée, pétillante. On la propose à celles qui veulent une rose qui danse plutôt qu'une rose qui trône.</p>
+                </div>
+                <div class="perfume-item">
+                    <h4>Carnal Flower – Matière Première ⭐⭐⭐⭐⭐</h4>
+                    <p>La rose sensuelle qu'on réserve aux audacieuses. Enveloppée de tubéreuse et de musc, elle devient charnelle, presque animale. Une déclaration d'amour olfactive.</p>
+                </div>
+            </div>
+            
+            <h3>Pourquoi choisir un parfum à la rose ?</h3>
+            <p>En boutique, on vous explique pourquoi la rose reste éternelle :</p>
+            <ul>
+                <li><strong>Féminine intemporelle</strong> : Jamais démodée, toujours élégante</li>
+                <li><strong>Polyvalente</strong> : Se porte du matin au soir, en toute saison</li>
+                <li><strong>Émotionnelle</strong> : Évoque des souvenirs, crée des moments</li>
+                <li><strong>Variée</strong> : De la rose fraîche à la rose épicée, il y en a pour tous les goûts</li>
+            </ul>
+            
+            <h3>Comment on vous conseille de porter la rose ?</h3>
+            <p>La rose est une fleur pour toutes les saisons. Légère et aérienne au printemps, fruitée en été, épicée en automne, et enveloppante en hiver. On vous recommande d'en appliquer sur les cheveux et les poignets pour un sillage délicat. Venez tester nos différentes roses, on vous aidera à trouver votre signature florale !</p>
+        `,
+        tags: ["rose", "fleurs", "parfums floraux", "élégance"]
+    },
+    {
+        id: 5,
+        title: "Le Santal : La sérénité boisée",
+        image: "bois de santal we use in perfume.jpg",
+        category: "Parfums Boisés",
+        readTime: "4 min",
+        date: "08 Déc 2025",
+        fullContent: `
+            <h3>Le santal, le bois qu'on adore vous proposer</h3>
+            <p>Le santal qu'on vous vend est le souffle calme de la forêt en flacon. C'est notre catégorie unisexe préférée, celle qu'on recommande aux couples qui veulent partager un parfum. Sa douceur laiteuse, sa chaleur discrète en font un bois qui apaise autant qu'il enveloppe.</p>
+            
+            <h3>Les santals qu'on a le plaisir de vous présenter</h3>
+            <div class="perfume-showcase">
+                <div class="perfume-item">
+                    <h4>Santal 33 – Le Labo ⭐⭐⭐⭐⭐</h4>
+                    <p>Notre best-seller boisée ! Le santal iconique de notre époque. Frais, légèrement cuiré, avec une pointe de violette. On le vend à une clientèle jeune et branchée qui cherche sa signature.</p>
+                </div>
+                <div class="perfume-item">
+                    <h4>Tam Dao – Diptyque ⭐⭐⭐⭐⭐</h4>
+                    <p>Pour les amateurs de zen ! Le voyage au Vietnam en flacon. Un santal pur, simple, qu'on propose aux clients qui cherchent la sérénité bouddhiste dans un parfum.</p>
+                </div>
+                <div class="perfume-item">
+                    <h4>Santal Majuscule – Serge Lutens ⭐⭐⭐⭐⭐</h4>
+                    <p>Le santal littéraire qu'on adore ! Enrichi de rose et de cacao, il devient complexe, profond, mystérieux. On le recommande aux clients qui aiment les parfums avec une histoire.</p>
+                </div>
+            </div>
+            
+            <h3>Pourquoi opter pour un parfum au santal ?</h3>
+            <p>Quand on vous présente un santal, on met en avant :</p>
+            <ul>
+                <li><strong>Apaisant</strong> : Effet calmant presque thérapeutique</li>
+                <li><strong>Tenace</strong> : Tient des heures sans être envahissant</li>
+                <li><strong>Unisexe par excellence</strong> : Plait à tous, sans distinction</li>
+                <li><strong>Facile à porter</strong> : Impossible de se tromper avec un bon santal</li>
+            </ul>
+            
+            <h3>Comment on vous conseille de porter le santal ?</h3>
+            <p>Le santal est l'un des rares parfums qui transcendent les genres. On vous recommande de l'appliquer le matin pour profiter de son effet apaisant toute la journée. Parfait pour le travail ou les moments où on recherche calme et concentration. Venez sentir nos différents santals, on vous aidera à trouver votre bois fétiche !</p>
+        `,
+        tags: ["santal", "bois", "sérénité", "parfums unisexes"]
+    },
+    {
+        id: 6,
+        title: "Le Safran : L'or rouge des épices",
+        image: "safran.jpg",
+        category: "Parfums Épicés",
+        readTime: "4 min",
+        date: "08 Déc 2025",
+        fullContent: `
+            <h3>Le safran, l'épice des rois qu'on vous propose</h3>
+            <p>Le safran qu'on vous vend est la lumière du soleil capturée en épice. C'est notre catégorie "coup de cœur", celle qu'on adore présenter aux clients qui cherchent l'exceptionnel. Son parfum est un paradoxe délicieux : à la fois métallique et doux, médicinal et sensuel.</p>
+            
+            <h3>Les safrans qu'on a la chance de commercialiser</h3>
+            <div class="perfume-showcase">
+                <div class="perfume-item">
+                    <h4>Baccarat Rouge 540 – Maison Francis Kurkdjian ⭐⭐⭐⭐⭐</h4>
+                    <p>La légende qu'on ne présente plus ! Notre best-seller absolu. Le safran y rencontre l'amande et le jasmin dans une alchimie magique. On le vend à tous ceux qui veulent LE parfum qui défie le temps.</p>
+                </div>
+                <div class="perfume-item">
+                    <h4>Safran Troublant – L'Artisan Parfumeur ⭐⭐⭐⭐</h4>
+                    <p>Pour une approche subtile ! Le safran dans toute sa transparence. Léger, aérien, presque vaporeux. On le propose aux clients qui veulent une épice discrète pour le quotidien.</p>
+                </div>
+                <div class="perfume-item">
+                    <h4>Ambre Safran – Atelier Cologne ⭐⭐⭐⭐</h4>
+                    <p>La rencontre du feu et de la terre ! Le safran épicé réchauffe un ambre profond. On le recommande pour l'automne et l'hiver, comme un feu de cheminée en parfum.</p>
+                </div>
+            </div>
+            
+            <h3>Pourquoi craquer pour un parfum au safran ?</h3>
+            <p>Quand on vous vend un safran, on insiste sur :</p>
+            <ul>
+                <li><strong>Exceptionnel</strong> : Une signature reconnaissable entre mille</li>
+                <li><strong>Luxe immédiat</strong> : Donne instantanément une impression de sophistication</li>
+                <li><strong>Conversation</strong> : Les gens demandent toujours "Qu'est-ce que vous portez ?"</li>
+                <li><strong>Évolutif</strong> : Se transforme magnifiquement sur la peau</li>
+            </ul>
+            
+            <h3>Comment on vous conseille de porter le safran ?</h3>
+            <p>Le safran est le parfum des occasions spéciales qu'on recommande pour les soirées d'hiver, les événements importants, ou simplement quand on veut se sentir exceptionnel. On vous conseille de l'appliquer une heure avant de sortir pour laisser le temps aux notes de tête de s'évaporer et laisser place à la magie du safran. Venez découvrir cette épice précieuse en boutique !</p>
+        `,
+        tags: ["safran", "épices", "luxe", "parfums d'exception"]
+    },
+    {
+        id: 7,
+        title: "Le Cuir : L'élégance rebelle",
+        image: "cuir.jpg",
+        category: "Parfums Cuir",
+        readTime: "5 min",
+        date: "08 Déc 2025",
+        fullContent: `
+            <h3>Le cuir, l'émotion qu'on adore vous proposer</h3>
+            <p>Le cuir qu'on vous vend n'est pas une matière, c'est une émotion. C'est notre catégorie "caractère", celle qu'on propose aux clients qui veulent se démarquer. C'est le crissement d'une selle neuve, l'odeur d'une bibliothèque ancienne, le souvenir d'une veste en cuir portée des années.</p>
+            
+            <h3>Les cuirs qu'on aime vous faire essayer</h3>
+            <div class="perfume-showcase">
+                <div class="perfume-item">
+                    <h4>Cuir de Russie – Chanel ⭐⭐⭐⭐⭐</h4>
+                    <p>Le classique absolu qu'on adore ! Créé en 1924, il associe le cuir au bouleau brûlé et à l'iris. On le propose aux clients qui cherchent l'élégance intemporelle, celle qui traverse les décennies.</p>
+                </div>
+                <div class="perfume-item">
+                    <h4>Ombré Leather – Tom Ford ⭐⭐⭐⭐⭐</h4>
+                    <p>Le cuir moderne qui cartonne ! Suave, sensuel, avec une touche fruitée inattendue. On le vend aux clients qui aiment le cuir mais avec une pointe de douceur contemporaine.</p>
+                </div>
+                <div class="perfume-item">
+                    <h4>Daim Blanc – Frédéric Malle ⭐⭐⭐⭐⭐</h4>
+                    <p>Le cuir délicat qu'on recommande aux femmes audacieuses ! Poudré, irisé, presque féminin. Comme un gant de daim blanc oublié sur un fauteuil en velours.</p>
+                </div>
+            </div>
+            
+            <h3>Pourquoi choisir un parfum cuir ?</h3>
+            <p>Quand on vous présente un cuir, on souligne :</p>
+            <ul>
+                <li><strong>Caractère</strong> : Affirme une personnalité forte et originale</li>
+                <li><strong>Modernité</strong> : Loin des floraux classiques, c'est une alternative audacieuse</li>
+                <li><strong>Élégance brute</strong> : Sophistiqué sans être conventionnel</li>
+                <li><strong>Mixte tendance</strong> : De plus en plus porté par les femmes</li>
+            </ul>
+            
+            <h3>Comment on vous conseille de porter le cuir ?</h3>
+            <p>Le cuir n'est pas un parfum timide, et on vous le dit franchement ! On vous recommande de le porter avec confiance, c'est un parfum qui s'assume et qui déclare. Parfait pour les personnalités affirmées, les créatifs, les indépendants. Il se porte aussi bien sur un jean que sur un costume trois-pièces. Venez tester nos différents cuirs, on vous aidera à trouver celui qui correspond à votre personnalité !</p>
+        `,
+        tags: ["cuir", "élégance", "rebelle", "parfums caractère"]
+    },
+    {
+        id: 8,
+        title: "La Tubéreuse : Le parfum défendu",
+        image: "tureberuse.jpg",
+        category: "Parfums Blancs",
+        readTime: "6 min",
+        date: "08 Déc 2025",
+        fullContent: `
+            <h3>La tubéreuse, la fleur du désir qu'on vous propose</h3>
+            <p>La tubéreuse qu'on vous vend est la fleur qui parfume la nuit. C'est notre catégorie "audacieuse", celle qu'on réserve aux clientes qui osent. Elle ne s'épanouit qu'à la tombée du jour, déployant un parfum si sensuel qu'il fut longtemps interdit aux jeunes filles.</p>
+            
+            <h3>Les tubéreuses qu'on adore vous présenter</h3>
+            <div class="perfume-showcase">
+                <div class="perfume-item">
+                    <h4>Poison – Dior ⭐⭐⭐⭐⭐</h4>
+                    <p>La révolution qu'on ne présente plus ! En 1985, Poison a choqué le monde avec sa tubéreuse opulente. On la vend aux clientes qui veulent un symbole de féminité puissante, intemporelle.</p>
+                </div>
+                <div class="perfume-item">
+                    <h4>Divine – Jean Paul Gaultier ⭐⭐⭐⭐</h4>
+                    <p>La tubéreuse spirituelle qu'on recommande ! Enveloppée d'encens et de vanille, elle devient presque sacrée. On la propose aux clientes qui cherchent une ode à la féminité céleste.</p>
+                </div>
+                <div class="perfume-item">
+                    <h4>Tubéreuse Astrale – Crivelli ⭐⭐⭐⭐⭐</h4>
+                    <p>La nouveauté qu'on adore ! La tubéreuse cosmique. Claire, lumineuse, avec des accents minéraux. On la vend aux clientes modernes qui cherchent l'originalité.</p>
+                </div>
+                <div class="perfume-item">
+                    <h4>Fracas – Robert Piguet ⭐⭐⭐⭐⭐</h4>
+                    <p>La référence absolue qu'on a la chance de proposer ! Créé en 1948, c'est la tubéreuse dans toute sa splendeur crémeuse et sensuelle. Pour les puristes et les connaisseuses.</p>
+                </div>
+            </div>
+            
+            <h3>Pourquoi craquer pour une tubéreuse ?</h3>
+            <p>Quand on vous présente une tubéreuse, on vous prévient :</p>
+            <ul>
+                <li><strong>Impact immédiat</strong> : On la remarque, on se souvient de vous</li>
+                <li><strong>Sensualité assumée</strong> : Pour celles qui n'ont pas peur d'être désirées</li>
+                <li><strong>Originalité</strong> : Loin des floraux conventionnels</li>
+                <li><strong>Conversation</strong> : Crée le dialogue, intrigue, fascine</li>
+            </ul>
+            
+            <h3>Comment on vous conseille de porter la tubéreuse ?</h3>
+            <p>La tubéreuse est un parfum d'impact, et on vous le dit : une seule pulvérisation suffit généralement ! On vous recommande de la porter pour les soirées, les occasions spéciales, ou simplement quand on veut se sentir irrésistible. C'est le parfum des femmes qui savent ce qu'elles veulent. Attention : on vous prévient, c'est addictif ! Venez découvrir cette fleur ensorcelante en boutique, mais on ne pourra pas être tenus responsables si vous en tombez amoureuse !</p>
+        `,
+        tags: ["tubéreuse", "fleurs blanches", "sensuel", "parfums d'impact"]
+    }
+];
+// ========== DOMContentLoaded event ==========
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize cart functionality
+    initCart();
+    updateCartUI();
+    
+    // Initialize mobile menu
+    initMobileMenu();
+    
+    // Initialize checkout form
+    initCheckoutForm();
+    
+    // Add promotion filter to mobile menu
+    addPromotionFilterToMenu();
+    
+    // Generate blog accordion
+    generateBlogAccordion();
+    
+    // Initialize newsletter form
+    initNewsletterForm();
+    
+    // Check for selected blog article
+    checkAndOpenSelectedArticle();
+});
+
+// ========== GENERATE BLOG ACCORDION ==========
+function generateBlogAccordion() {
+    blogAccordion.innerHTML = '';
+    
+    blogPosts.forEach((post, index) => {
+        const blogItem = document.createElement('div');
+        blogItem.className = 'blog-item';
+        blogItem.id = `blog-item-${post.id}`;
+        blogItem.innerHTML = `
+            <div class="blog-header">
+                <div class="blog-header-content">
+                    <div class="blog-number">${index + 1}</div>
+                    <div class="blog-title-info">
+                        <h3 class="blog-title">${post.title}</h3>
+                        <div class="blog-meta">
+                            <span class="blog-category">${post.category}</span>
+                            <span class="blog-read-time"><i class="far fa-clock"></i> ${post.readTime} de lecture</span>
+                            <span class="blog-date"><i class="far fa-calendar"></i> ${post.date}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="blog-toggle">
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+            </div>
+            <div class="blog-content">
+                <div class="blog-content-inner">
+                    <div class="blog-image">
+                        <img src="${post.image}" alt="${post.title}" loading="lazy">
+                    </div>
+                    <div class="blog-full-content">
+                        ${post.fullContent}
+                    </div>
+                    <div class="blog-tags">
+                        ${post.tags.map(tag => `<span class="blog-tag">#${tag}</span>`).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Add click event to toggle accordion
+        const header = blogItem.querySelector('.blog-header');
+        const content = blogItem.querySelector('.blog-content');
+        
+        header.addEventListener('click', function() {
+            // Close all other items
+            document.querySelectorAll('.blog-item.active').forEach(activeItem => {
+                if (activeItem !== blogItem) {
+                    activeItem.classList.remove('active');
+                    const activeContent = activeItem.querySelector('.blog-content');
+                    activeContent.style.maxHeight = '0';
+                }
+            });
+            
+            // Toggle current item
+            blogItem.classList.toggle('active');
+            
+            if (blogItem.classList.contains('active')) {
+                content.style.maxHeight = content.scrollHeight + 'px';
+                // Scroll to item if needed
+                blogItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            } else {
+                content.style.maxHeight = '0';
+            }
+        });
+        
+        blogAccordion.appendChild(blogItem);
+    });
+    
+    // Open first item by default if no specific article is selected
+    const selectedArticleId = localStorage.getItem('selectedBlogArticle');
+    if (!selectedArticleId) {
+        setTimeout(() => {
+            const firstItem = document.getElementById('blog-item-1');
+            if (firstItem) {
+                firstItem.classList.add('active');
+                const firstContent = firstItem.querySelector('.blog-content');
+                firstContent.style.maxHeight = firstContent.scrollHeight + 'px';
+            }
+        }, 100);
+    }
+}
+
+// ========== CHECK FOR SELECTED BLOG ARTICLE ==========
+function checkAndOpenSelectedArticle() {
+    const selectedArticleId = localStorage.getItem('selectedBlogArticle');
+    
+    if (selectedArticleId) {
+        // Wait for the accordion to be generated
+        setTimeout(() => {
+            // Find the blog item
+            const blogItem = document.getElementById(`blog-item-${selectedArticleId}`);
+            
+            if (blogItem) {
+                // Close all other items
+                document.querySelectorAll('.blog-item.active').forEach(activeItem => {
+                    if (activeItem !== blogItem) {
+                        activeItem.classList.remove('active');
+                        const activeContent = activeItem.querySelector('.blog-content');
+                        activeContent.style.maxHeight = '0';
+                    }
+                });
+                
+                // Open the selected item
+                blogItem.classList.add('active');
+                const content = blogItem.querySelector('.blog-content');
+                content.style.maxHeight = content.scrollHeight + 'px';
+                
+                // Scroll to the item
+                setTimeout(() => {
+                    blogItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 30);
+                
+                // Clear the stored article ID
+                localStorage.removeItem('selectedBlogArticle');
+            }
+        }, 50);
+    }
+}
+
+// ========== INIT NEWSLETTER FORM ==========
+function initNewsletterForm() {
+    if (blogNewsletterForm) {
+        blogNewsletterForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = this.querySelector('.newsletter-input').value;
+            
+            // Simple email validation
+            if (email && email.includes('@')) {
+                // In a real app, you would save this to Firebase
+                showNotification('Merci pour votre abonnement à notre blog!', 'success');
+                this.reset();
+            } else {
+                showNotification('Veuillez entrer une adresse email valide', 'error');
+            }
+        });
+    }
+}
+
+// ========== ADD PROMOTION FILTER TO MOBILE MENU ==========
+function addPromotionFilterToMenu() {
+    const mobileMenuList = document.querySelector('.mobile-menu ul');
+    if (mobileMenuList) {
+        const existingPromotionItem = mobileMenuList.querySelector('a[onclick*="promotion"]');
+        if (!existingPromotionItem) {
+            const promotionItem = document.createElement('li');
+            promotionItem.innerHTML = `
+                <a href="javascript:void(0)" onclick="goToPromotions()">
+                    <i class="fas fa-tag"></i> Promotion
+                </a>
+            `;
+            
+            const aboutLink = mobileMenuList.querySelector('a[href="about.html"]');
+            const blogLink = mobileMenuList.querySelector('a[href="blog.html"]');
+            
+            if (aboutLink && blogLink) {
+                // Insert between About and Blog
+                aboutLink.parentElement.after(promotionItem);
+            } else if (blogLink) {
+                blogLink.parentElement.before(promotionItem);
+            } else {
+                mobileMenuList.appendChild(promotionItem);
+            }
+        }
+    }
+}
+
+// ========== GO TO PROMOTIONS FUNCTION ==========
+function goToPromotions() {
+    localStorage.setItem('selectedCategory', 'promotion');
+    window.location.href = 'Categories.html';
+    
+    const mobileMenu = document.getElementById('mobile-menu');
+    const menuOverlay = document.getElementById('menu-overlay');
+    
+    if (mobileMenu) mobileMenu.classList.remove('active');
+    if (menuOverlay) menuOverlay.classList.remove('active');
+    document.body.style.overflow = '';
+}
+
+// ========== CATEGORY NAVIGATION FUNCTIONS ==========
+function navigateToCategory(categoryKey) {
+    localStorage.setItem('selectedCategory', categoryKey);
+    window.location.href = 'Categories.html';
+}
+
+function filterByCategory(categoryKey) {
+    navigateToCategory(categoryKey);
+}
+
+// ========== MOBILE MENU FUNCTIONS ==========
+function initMobileMenu() {
+    hamburgerMenu.addEventListener('click', function() {
+        mobileMenu.classList.add('active');
+        menuOverlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    });
+    
+    closeMenu.addEventListener('click', function() {
+        mobileMenu.classList.remove('active');
+        menuOverlay.classList.remove('active');
+        document.body.style.overflow = '';
+    });
+    
+    menuOverlay.addEventListener('click', function() {
+        mobileMenu.classList.remove('active');
+        menuOverlay.classList.remove('active');
+        document.body.style.overflow = '';
+    });
+}
+
+// ========== CART FUNCTIONS ==========
+function initCart() {
+    cartIcon.addEventListener('click', function() {
+        cartSidebar.classList.add('active');
+        cartOverlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    });
+
+    closeCart.addEventListener('click', function() {
+        cartSidebar.classList.remove('active');
+        cartOverlay.classList.remove('active');
+        document.body.style.overflow = '';
+    });
+
+    cartOverlay.addEventListener('click', function() {
+        cartSidebar.classList.remove('active');
+        cartOverlay.classList.remove('active');
+        document.body.style.overflow = '';
+    });
+
+    checkoutBtn.addEventListener('click', function() {
+        if (cart.length === 0) {
+            showNotification('Votre panier est vide', 'error');
+            return;
+        }
+        checkoutFormOverlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    });
+}
+
+function updateCartUI() {
+    const totalItems = cart.reduce((total, item) => total + item.quantity, 0);
+    cartCount.textContent = totalItems;
+    
+    cartItems.innerHTML = '';
+    
+    if (cart.length === 0) {
+        cartItems.innerHTML = `
+            <div class="empty-cart">
+                <i class="fas fa-shopping-bag"></i>
+                <p>Votre panier est vide</p>
+            </div>
+        `;
+    } else {
+        cart.forEach((item, index) => {
+            const cartItem = document.createElement('div');
+            cartItem.className = 'cart-item';
+            
+            const brandDisplay = item.brand ? `<div class="cart-item-brand" style="font-size: 12px; color: #666; margin-bottom: 5px;">${item.brand}</div>` : '';
+            
+            cartItem.innerHTML = `
+                <div class="cart-item-image" style="background-image: url('${item.imageUrl}');"></div>
+                <div class="cart-item-details">
+                    ${brandDisplay}
+                    <div class="cart-item-name">${item.name}</div>
+                    <div class="cart-item-price" style="color: #e74c3c; font-weight: bold;">${item.price.toFixed(2)} MAD</div>
+                    <div class="cart-item-size">
+                        <small>Volume: ${item.size || item.volume || '50ml'}</small>
+                        <div class="size-options">
+                            <span class="size-option ${item.size === item.size ? 'selected' : ''}" 
+                                  data-index="${index}" data-size="${item.size}">
+                                ${item.size}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="cart-item-controls">
+                        <button class="quantity-btn decrease-quantity" data-index="${index}">-</button>
+                        <span class="cart-item-quantity">${item.quantity}</span>
+                        <button class="quantity-btn increase-quantity" data-index="${index}">+</button>
+                        <button class="remove-item" data-index="${index}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            cartItems.appendChild(cartItem);
+        });
+        
+        document.querySelectorAll('.size-option').forEach(option => {
+            option.addEventListener('click', function() {
+                const index = parseInt(this.getAttribute('data-index'));
+                const size = this.getAttribute('data-size');
+                updateCartItemSize(index, size);
+            });
+        });
+        
+        document.querySelectorAll('.decrease-quantity').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const index = parseInt(this.getAttribute('data-index'));
+                updateQuantity(index, -1);
+            });
+        });
+        
+        document.querySelectorAll('.increase-quantity').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const index = parseInt(this.getAttribute('data-index'));
+                updateQuantity(index, 1);
+            });
+        });
+        
+        document.querySelectorAll('.remove-item').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const index = parseInt(this.getAttribute('data-index'));
+                removeFromCart(index);
+            });
+        });
+    }
+    
+    const totalPrice = cart.reduce((total, item) => {
+        return total + (item.price * item.quantity);
+    }, 0);
+    cartTotalPrice.textContent = `${totalPrice.toFixed(2)} MAD`;
+}
+
+function updateCartItemSize(index, size) {
+    if (cart[index]) {
+        cart[index].size = size;
+        saveCartToStorage();
+        updateCartUI();
+    }
+}
+
+function saveCartToStorage() {
+    localStorage.setItem('muskandamber-cart', JSON.stringify(cart));
+}
+
+function updateQuantity(index, change) {
+    if (cart[index]) {
+        cart[index].quantity += change;
+        
+        if (cart[index].quantity <= 0) {
+            removeFromCart(index);
+        } else {
+            saveCartToStorage();
+            updateCartUI();
+        }
+    }
+}
+
+function removeFromCart(index) {
+    if (cart[index]) {
+        const removedItem = cart[index];
+        cart.splice(index, 1);
+        saveCartToStorage();
+        updateCartUI();
+        showNotification(`${removedItem.name} retiré du panier!`);
+    }
+}
+
+// ========== CHECKOUT FUNCTIONS ==========
+function initCheckoutForm() {
+    cancelOrderBtn.addEventListener('click', function() {
+        checkoutFormOverlay.classList.remove('active');
+        document.body.style.overflow = '';
+    });
+
+    checkoutForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        submitOrder();
+    });
+
+    checkoutFormOverlay.addEventListener('click', function(e) {
+        if (e.target === this) {
+            this.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+    });
+}
+
+async function submitOrder() {
+    const name = document.getElementById('customer-name').value;
+    const phone = document.getElementById('customer-phone').value;
+    const address = document.getElementById('customer-address').value;
+    const notes = document.getElementById('customer-notes').value;
+    
+    const totalPrice = cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+    
+    const order = {
+        customer: { name, phone, address, notes },
+        items: cart,
+        total: totalPrice,
+        status: 'pending',
+        date: new Date().toISOString(),
+        orderNumber: 'ORD-' + Date.now()
+    };
+    
+    try {
+        await db.collection('orders').add(order);
+        showNotification('Commande passée avec succès!', 'success');
+        
+        cart = [];
+        saveCartToStorage();
+        updateCartUI();
+        
+        checkoutFormOverlay.classList.remove('active');
+        document.body.style.overflow = '';
+        
+        checkoutForm.reset();
+    } catch (error) {
+        console.error('Error submitting order:', error);
+        showNotification('Erreur lors de la soumission de la commande', 'error');
+    }
+}
+
+// ========== NOTIFICATION FUNCTION ==========
+function showNotification(message, type = 'success') {
+    const existingNotification = document.querySelector('.notification');
+    if (existingNotification) {
+        existingNotification.remove();
+    }
+    
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.innerHTML = `
+        <div class="notification-content">
+            <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+            <span>${message}</span>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
+    </script>
+</body>
+</html>
+
+
+
+
+

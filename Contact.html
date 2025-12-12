@@ -1,0 +1,2486 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact | Musk & Amber</title>
+    <link rel="shortcut icon" type="image/x-icon" href="./WhatsApp_Image_2025-11-25_at_15.35.57-removebg-preview.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary: #3e1b2a;
+            --secondary: #561e4b;
+            --accent: #868d7d;
+            --light: #f8f5f2;
+            --dark: #2c2c2c;
+            --gray: #95a5a6;
+            --success: #27ae60;
+        }
+
+        body {
+            background-color: #fefefe;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Header Styles */
+        header {
+            background-color: white;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-top {
+            background-color: var(--primary);
+            color: white;
+            padding: 10px 0;
+        }
+
+        .header-top-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .header-contact {
+            font-size: 14px;
+            margin-right: 20px;
+        }
+
+        .header-contact i {
+            margin-right: 5px;
+        }
+
+        .header-social {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header-social a {
+            color: white;
+            font-size: 14px;
+        }
+
+        .header-social a:hover {
+            color: var(--accent);
+        }
+
+        .logo-container {
+            text-align: center;
+            padding: 0px 0;
+            position: relative;
+        }
+
+        .logo-wrapper {
+            display: inline-block;
+            position: relative;
+        }
+
+        /* UPDATED: Logo without frame - just circular image */
+        .logo-circle {
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            position: relative;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            /* Removed: background, box-shadow, border */
+        }
+
+        .logo-img {
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            object-fit: cover;
+            /* Removed: border */
+            box-shadow: 0 5px 20px rgba(86, 30, 75, 0.2); /* Added subtle shadow */
+        }
+
+        .logo-text {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--primary);
+            letter-spacing: 1px;
+        }
+
+        .logo-text span {
+            color: var(--secondary);
+        }
+
+        /* Main Navigation */
+        .main-nav {
+            background-color: var(--light);
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0;
+            position: relative;
+        }
+
+        /* Desktop Navigation */
+        .desktop-nav {
+            display: flex;
+        }
+
+        .desktop-nav ul {
+            display: flex;
+            list-style: none;
+        }
+
+        .desktop-nav ul li {
+            position: relative;
+        }
+
+        .desktop-nav ul li a {
+            text-decoration: none;
+            color: var(--dark);
+            font-weight: 600;
+            transition: all 0.3s;
+            padding: 20px 25px;
+            display: block;
+            text-transform: uppercase;
+            font-size: 14px;
+            letter-spacing: 0.5px;
+        }
+
+        .desktop-nav ul li a:hover {
+            color: var(--secondary);
+            background-color: rgba(86, 30, 75, 0.05);
+        }
+
+        .desktop-nav a.active {
+            color: var(--secondary);
+            background-color: rgba(86, 30, 75, 0.1);
+        }
+
+        /* Dropdown Menu */
+        .dropdown {
+            position: relative;
+        }
+
+        .dropdown-content {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background-color: white;
+            min-width: 220px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            border-radius: 5px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+            z-index: 1000;
+            padding: 10px 0;
+        }
+
+        .dropdown:hover .dropdown-content {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .dropdown-content a {
+            color: var(--dark);
+            padding: 12px 20px;
+            text-decoration: none;
+            display: block;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+            text-transform: none;
+        }
+
+        .dropdown-content a:hover {
+            background-color: var(--light);
+            color: var(--secondary);
+            border-left: 3px solid var(--secondary);
+        }
+
+        .dropdown-content a i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Mobile Navigation */
+        .mobile-nav {
+            display: none;
+        }
+
+        .hamburger-menu {
+            font-size: 24px;
+            color: var(--dark);
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .mobile-menu {
+            position: fixed;
+            top: 0;
+            left: -100%;
+            width: 80%;
+            max-width: 300px;
+            height: 100vh;
+            background-color: white;
+            box-shadow: 2px 0 15px rgba(0, 0, 0, 0.1);
+            transition: left 0.3s ease;
+            z-index: 1000;
+            padding: 70px 20px 20px;
+        }
+
+        .mobile-menu.active {
+            left: 0;
+        }
+
+        .mobile-menu ul {
+            list-style: none;
+        }
+
+        .mobile-menu ul li {
+            margin-bottom: 10px;
+        }
+
+        .mobile-menu ul li a {
+            text-decoration: none;
+            color: var(--dark);
+            font-size: 16px;
+            font-weight: 500;
+            display: block;
+            padding: 12px;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+
+        .mobile-menu ul li a:hover {
+            background-color: var(--light);
+            color: var(--secondary);
+        }
+
+        .menu-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            display: none;
+        }
+
+        .menu-overlay.active {
+            display: block;
+        }
+
+        .close-menu {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 24px;
+            color: var(--dark);
+            cursor: pointer;
+        }
+
+        .cart-icon {
+            position: fixed;
+            top: 200px;
+            right: 20px;
+            background-color: var(--secondary);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(86, 30, 75, 0.3);
+            z-index: 99;
+            transition: transform 0.3s;
+        }
+
+        .cart-icon:hover {
+            transform: scale(1.1);
+        }
+
+        .cart-count {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: var(--primary);
+            color: white;
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            font-size: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+        }
+
+        .cart-sidebar {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 100%;
+            max-width: 400px;
+            height: 100vh;
+            background-color: white;
+            box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+            transition: right 0.3s ease;
+            z-index: 1001;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .cart-sidebar.active {
+            right: 0;
+        }
+
+        .cart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .cart-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .close-cart {
+            font-size: 22px;
+            color: var(--dark);
+            cursor: pointer;
+        }
+
+        .cart-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .cart-items {
+            margin-bottom: 20px;
+        }
+
+        .cart-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .cart-item-image {
+            width: 80px;
+            height: 80px;
+            background-size: cover;
+            background-position: center;
+            border-radius: 4px;
+            margin-right: 15px;
+        }
+
+        .cart-item-details {
+            flex: 1;
+        }
+
+        .cart-item-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .cart-item-price {
+            color: var(--secondary);
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        /* Size Options Styles */
+        .cart-item-size {
+            margin-bottom: 10px;
+        }
+
+        .size-options {
+            display: flex;
+            gap: 10px;
+            margin-top: 5px;
+        }
+
+        .size-option {
+            padding: 5px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .size-option:hover {
+            border-color: var(--secondary);
+            color: var(--secondary);
+        }
+
+        .size-option.selected {
+            background-color: var(--secondary);
+            color: white;
+            border-color: var(--secondary);
+        }
+
+        .cart-item-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .quantity-btn {
+            width: 30px;
+            height: 30px;
+            background-color: var(--light);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .quantity-btn:hover {
+            background-color: #ddd;
+        }
+
+        .cart-item-quantity {
+            font-weight: 600;
+            min-width: 30px;
+            text-align: center;
+        }
+
+        .remove-item {
+            color: var(--secondary);
+            background: none;
+            border: none;
+            cursor: pointer;
+            margin-left: auto;
+        }
+
+        .cart-footer {
+            padding: 20px;
+            border-top: 1px solid #eee;
+            background-color: #f9f9f9;
+        }
+
+        .cart-total {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .checkout-btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background-color: var(--secondary);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .checkout-btn:hover {
+            background-color: var(--primary);
+        }
+
+        .empty-cart {
+            text-align: center;
+            padding: 40px 0;
+            color: var(--gray);
+        }
+
+        .empty-cart i {
+            font-size: 48px;
+            margin-bottom: 15px;
+            color: #ddd;
+        }
+
+        /* Contact Hero */
+        .contact-hero {
+            position: relative;
+            height: 40vh;
+            min-height: 300px;
+            overflow: hidden;
+            margin-bottom: 80px;
+            display: flex;
+            align-items: center;
+            background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), 
+                        url('just\ the\ contact\ us\ symbol\ with\ art\ \(1\).jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 3;
+            width: 100%;
+            text-align: center;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .contact-hero h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: white;
+            line-height: 1.2;
+        }
+
+        .contact-hero p {
+            font-size: 18px;
+            margin-bottom: 30px;
+            color: rgba(255, 255, 255, 0.9);
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Contact Section */
+        .contact-section {
+            padding: 80px 0;
+            background-color: white;
+        }
+
+        .section-title {
+            text-align: center;
+            margin-bottom: 60px;
+            color: var(--primary);
+            font-size: 36px;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            width: 80px;
+            height: 3px;
+            background-color: var(--secondary);
+            bottom: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .contact-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            margin-bottom: 80px;
+        }
+
+        /* Contact Info */
+        .contact-info {
+            padding: 40px;
+            background-color: var(--light);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            height: auto;
+        }
+
+        .contact-info h2 {
+            font-size: 28px;
+            margin-bottom: 30px;
+            color: var(--primary);
+        }
+
+        .contact-info p {
+            color: #555;
+            margin-bottom: 40px;
+            line-height: 30px;
+        }
+
+        .contact-details {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+        }
+
+        .contact-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .contact-text h3 {
+            font-size: 18px;
+            margin-bottom: 5px;
+            color: var(--primary);
+        }
+
+        .contact-text p {
+            color: #666;
+            margin-bottom: 0;
+            line-height: 1.6;
+        }
+
+        .business-hours {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .hours-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            color: #555;
+        }
+
+        /* Contact Form */
+        .contact-form-container {
+            padding: 40px;
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .contact-form-container h2 {
+            font-size: 28px;
+            margin-bottom: 30px;
+            color: var(--primary);
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--dark);
+            font-size: 15px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+            background-color: #f9f9f9;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--secondary);
+            background-color: white;
+        }
+
+        textarea.form-control {
+            min-height: 150px;
+            resize: vertical;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .submit-btn:hover {
+            background: linear-gradient(135deg, var(--secondary), var(--primary));
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(86, 30, 75, 0.3);
+        }
+
+        /* FAQ Section */
+        .faq-section {
+            padding: 80px 0;
+            background-color: var(--light);
+        }
+
+        .faq-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .faq-item {
+            background-color: white;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s;
+        }
+
+        .faq-item.active {
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .faq-question {
+            padding: 20px 25px;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--primary);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.3s;
+        }
+
+        .faq-question:hover {
+            background-color: rgba(86, 30, 75, 0.05);
+        }
+
+        .faq-question i {
+            transition: transform 0.3s;
+        }
+
+        .faq-item.active .faq-question i {
+            transform: rotate(180deg);
+        }
+
+        .faq-answer {
+            padding: 0 25px;
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            color: #555;
+            line-height: 1.6;
+        }
+
+        .faq-item.active .faq-answer {
+            padding: 0 25px 25px;
+            max-height: 500px;
+        }
+
+        /* Map Section */
+        .map-section {
+            padding: 80px 0;
+            background-color: white;
+        }
+
+        .map-container {
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            height: 400px;
+            background-color: var(--light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+        }
+
+        .map-placeholder {
+            text-align: center;
+        }
+
+        .map-placeholder i {
+            font-size: 60px;
+            margin-bottom: 20px;
+            color: var(--secondary);
+        }
+
+        .map-placeholder h3 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        /* Newsletter */
+        .newsletter {
+            padding: 80px 0;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--dark) 100%);
+            color: white;
+            text-align: center;
+        }
+
+        .newsletter h2 {
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+
+        .newsletter p {
+            font-size: 18px;
+            margin-bottom: 30px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .newsletter-form {
+            display: flex;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .newsletter-input {
+            flex: 1;
+            padding: 15px 20px;
+            border: none;
+            border-radius: 30px 0 0 30px;
+            font-size: 16px;
+            outline: none;
+        }
+
+        .newsletter-button {
+            padding: 15px 30px;
+            background-color: var(--secondary);
+            color: white;
+            border: none;
+            border-radius: 0 30px 30px 0;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .newsletter-button:hover {
+            background-color: var(--accent);
+        }
+
+        /* Footer */
+        footer {
+            background-color: var(--dark);
+            color: white;
+            padding: 60px 0 30px;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .footer-column h3 {
+            font-size: 20px;
+            margin-bottom: 20px;
+            position: relative;
+            padding-bottom: 10px;
+        }
+
+        .footer-column h3::after {
+            content: '';
+            position: absolute;
+            width: 40px;
+            height: 2px;
+            background-color: var(--secondary);
+            bottom: 0;
+            left: 0;
+        }
+
+        .footer-column ul {
+            list-style: none;
+        }
+
+        .footer-column ul li {
+            margin-bottom: 10px;
+        }
+
+        .footer-column ul li a {
+            color: #bbb;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer-column ul li a:hover {
+            color: white;
+        }
+
+        .social-icons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .social-icons a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            color: white;
+            transition: background-color 0.3s;
+        }
+
+        .social-icons a:hover {
+            background-color: var(--secondary);
+        }
+
+        .copyright {
+            text-align: center;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #bbb;
+            font-size: 14px;
+        }
+
+        /* Checkout Form */
+        .checkout-form-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1002;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .checkout-form-overlay.active {
+            display: flex;
+        }
+
+        .checkout-form-container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .checkout-form-title {
+            margin-bottom: 20px;
+            color: var(--primary);
+            text-align: center;
+        }
+
+        .form-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+        }
+
+        .submit-order,
+        .cancel-order {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .submit-order {
+            background-color: var(--secondary);
+            color: white;
+        }
+
+        .submit-order:hover {
+            background-color: var(--primary);
+        }
+
+        .cancel-order {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .cancel-order:hover {
+            background-color: #c0392b;
+        }
+
+        /* Notifications */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 5px;
+            color: white;
+            font-weight: 500;
+            z-index: 9999;
+            animation: slideIn 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .notification.success {
+            background-color: var(--success);
+        }
+
+        .notification.error {
+            background-color: #e74c3c;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 992px) {
+            .contact-container {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+            
+            .dropdown-content {
+                position: static;
+                opacity: 1;
+                visibility: visible;
+                transform: none;
+                box-shadow: none;
+                padding-left: 20px;
+                display: none;
+            }
+            
+            .dropdown.active .dropdown-content {
+                display: block;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header-top {
+                padding: 10px 0;
+            }
+
+            .header-top-content {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+            }
+
+            .header-contact {
+                text-align: center;
+                margin-right: 0;
+                margin-bottom: 5px;
+            }
+
+            .header-social {
+                justify-content: center;
+                margin-bottom: 10px;
+            }
+
+            .logo-container {
+                padding: 15px 0;
+                position: relative;
+            }
+
+            /* UPDATED: Logo without frame for mobile */
+            .logo-circle {
+                width: 150px; /* Slightly smaller for mobile */
+                height: 150px;
+                margin-top: 10px;
+            }
+
+            .logo-img {
+                width: 150px;
+                height: 150px;
+                box-shadow: 0 3px 10px rgba(86, 30, 75, 0.2); /* Lighter shadow for mobile */
+            }
+
+            .logo-text {
+                font-size: 28px; /* Slightly smaller for mobile */
+                margin-top: 10px;
+            }
+
+            .desktop-nav {
+                display: none;
+            }
+
+            .mobile-nav {
+                display: block;
+                position: absolute;
+                top: 20px;
+                left: 20px;
+                transform: none;
+                z-index: 100;
+            }
+
+            .mobile-nav .hamburger-menu {
+                font-size: 28px;
+                color: var(--primary);
+                background-color: var(--light);
+                padding: 10px;
+                border-radius: 5px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            }
+
+            .cart-icon {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                width: 45px;
+                height: 45px;
+                font-size: 20px;
+                z-index: 101;
+            }
+
+            .cart-count {
+                width: 20px;
+                height: 20px;
+                font-size: 11px;
+            }
+
+            .main-nav {
+                display: none;
+            }
+
+            .contact-hero {
+                height: auto;
+                min-height: 250px;
+                margin-top: 20px;
+            }
+
+            .contact-hero h1 {
+                font-size: 32px;
+            }
+
+            .contact-hero p {
+                font-size: 16px;
+            }
+
+            .section-title {
+                font-size: 30px;
+            }
+
+            .contact-info,
+            .contact-form-container {
+                padding: 30px 20px;
+            }
+
+            .newsletter-form {
+                flex-direction: column;
+            }
+
+            .newsletter-input {
+                border-radius: 30px;
+                margin-bottom: 10px;
+            }
+
+            .newsletter-button {
+                border-radius: 30px;
+            }
+            
+            /* Mobile Menu Styles */
+            .mobile-menu {
+                position: fixed;
+                top: 0;
+                left: -100%;
+                width: 80%;
+                max-width: 300px;
+                height: 100vh;
+                background-color: white;
+                box-shadow: 2px 0 15px rgba(0, 0, 0, 0.1);
+                transition: left 0.3s ease;
+                z-index: 1000;
+                padding: 70px 20px 20px;
+            }
+
+            .mobile-menu.active {
+                left: 0;
+            }
+
+            .mobile-menu ul {
+                list-style: none;
+            }
+
+            .mobile-menu ul li {
+                margin-bottom: 10px;
+            }
+
+            .mobile-menu ul li a {
+                text-decoration: none;
+                color: var(--dark);
+                font-size: 16px;
+                font-weight: 500;
+                display: block;
+                padding: 12px;
+                border-radius: 4px;
+                transition: background-color 0.3s;
+            }
+
+            .mobile-menu ul li a:hover {
+                background-color: var(--light);
+                color: var(--secondary);
+            }
+
+            .menu-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.5);
+                z-index: 999;
+                display: none;
+            }
+
+            .menu-overlay.active {
+                display: block;
+            }
+
+            .close-menu {
+                position: absolute;
+                top: 20px;
+                right: 20px;
+                font-size: 24px;
+                color: var(--dark);
+                cursor: pointer;
+                z-index: 1001;
+            }
+
+            .form-buttons {
+                flex-direction: column;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .logo-text {
+                font-size: 24px; /* Adjusted for very small screens */
+            }
+
+            .logo-circle {
+                width: 140px; /* Smaller for very small screens */
+                height: 140px;
+            }
+
+            .logo-img {
+                width: 140px;
+                height: 140px;
+            }
+
+            .contact-hero h1 {
+                font-size: 26px;
+            }
+
+            .contact-item {
+                flex-direction: column;
+                text-align: center;
+                gap: 10px;
+            }
+
+            .contact-icon {
+                margin: 0 auto;
+            }
+
+            .footer-content {
+                grid-template-columns: 1fr;
+            }
+        }
+         .form-loading {
+            display: none;
+            text-align: center;
+            padding: 10px;
+            color: var(--secondary);
+        }
+        
+        .form-loading.active {
+            display: block;
+        }
+        
+        .form-loading .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid var(--light);
+            border-top: 3px solid var(--secondary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+         .submit-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        
+        .submit-btn:disabled:hover {
+            transform: none;
+            box-shadow: none;
+        }
+        /* Add to your existing CSS */
+.mobile-menu ul li a i {
+    width: 20px;
+    text-align: center;
+    margin-right: 10px;
+}
+
+.mobile-menu ul li a:hover {
+    background-color: #f8f5f2;
+    color: #561e4b;
+}
+
+/* Promotion specific icon color */
+.mobile-menu ul li a[onclick*="promotion"] i {
+    color: #ff9800;
+}
+    </style>
+</head>
+<body>
+    <!-- Header Top (Contact Info) -->
+    <div class="header-top">
+        <div class="container header-top-content">
+            <div class="header-contact">
+                <p>  Livraison disponible partout au Maroc, gratuite à partir de 1000dh  | </p>
+          
+            </div>
+            <div class="header-social">
+               
+                <a href="https://www.instagram.com/musk_and_amber_lovers/"><i class="fab fa-instagram"></i></a>
+                <a href="https://www.tiktok.com/@muskwamber"><i class="fab fa-tiktok"></i></a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logo Section (Separated) -->
+    <div class="logo-container">
+        <!-- Mobile Hamburger Menu -->
+        <div class="mobile-nav">
+            <div class="hamburger-menu" id="hamburger-menu">
+                <i class="fas fa-bars"></i>
+            </div>
+        </div>
+
+        <div class="logo-wrapper">
+            <div class="logo-circle">
+                <img src="./logo.jpeg" alt="Musk & Amber" class="logo-img">
+            </div>
+            <div class="logo-text">Musk<span> & Amber</span></div>
+        </div>
+    </div>
+
+    <!-- Main Navigation -->
+    <nav class="main-nav">
+        <div class="container nav-container">
+            <!-- Desktop Navigation -->
+            <div class="desktop-nav">
+                <ul>
+                    <li><a href="index.html">Accueil</a></li>
+                    <li><a href="Categories.html">Catégories</a></li>
+                    <li><a href="blog.html">Blog</a></li>
+                    <li class="dropdown">
+                        <a href="nouveautés.html">Nouveautés <i class="fas fa-chevron-down"></i></a>
+                        <div class="dropdown-content">
+                            <a href="nouveautés.html"><i class="fas fa-female"></i> Parfums Femme</a>
+                            <a href="nouveautés.html"><i class="fas fa-male"></i> Parfums Homme</a>
+                            <a href="nouveautés.html"><i class="fas fa-mosque"></i> Parfums Arabes</a>
+                            <a href="nouveautés.html"><i class="fas fa-star"></i> Éditions Limitées</a>
+                            <a href="nouveautés.html"><i class="fas fa-gift"></i> Coffrets Cadeaux</a>
+                        </div>
+                    </li>
+                    <li><a href="Contact.html" class="active">Contact</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu (Outside main nav) -->
+    <div class="mobile-menu" id="mobile-menu">
+        <div class="close-menu" id="close-menu">
+            <i class="fas fa-times"></i>
+        </div>
+        <ul>
+            <li><a href="index.html">Accueil</a></li>
+            <li><a href="javascript:void(0)" onclick="filterByCategory('femme')">Parfums femme</a></li>
+            <li><a href="javascript:void(0)" onclick="filterByCategory('homme')">Parfums homme</a></li>
+            <li><a href="javascript:void(0)" onclick="filterByCategory('arabes')">Parfum arabes</a></li>
+            <li><a href="javascript:void(0)" onclick="filterByCategory('niches')">Parfum de niche</a></li>
+            <li><a href="blog.html">Blog</a></li>
+            <li><a href="nouveautés.html" id="mobile-nouveautes">Nouveautés </a></li>
+            <li><a href="Contact.html" class="active">Contact</a></li>
+        </ul>
+    </div>
+    <div class="menu-overlay" id="menu-overlay"></div>
+
+    <!-- Cart Icon (Floating) -->
+    <div class="cart-icon" id="cart-icon">
+        <i class="fas fa-shopping-bag"></i>
+        <span class="cart-count">0</span>
+    </div>
+
+    <!-- Shopping Cart Sidebar -->
+    <div class="cart-sidebar" id="cart-sidebar">
+        <div class="cart-header">
+            <h2 class="cart-title">Votre panier</h2>
+            <div class="close-cart" id="close-cart">
+                <i class="fas fa-times"></i>
+            </div>
+        </div>
+        <div class="cart-content">
+            <div class="cart-items" id="cart-items">
+                <!-- Cart items will be dynamically loaded here -->
+            </div>
+        </div>
+        <div class="cart-footer">
+            <div class="cart-total">
+                <span>Total:</span>
+                <span id="cart-total-price">0.00 MAD</span>
+            </div>
+            <button class="checkout-btn" id="checkout-btn">Commander maintenant</button>
+        </div>
+    </div>
+    <div class="menu-overlay" id="cart-overlay"></div>
+
+    <!-- Checkout Form Overlay -->
+    <div class="checkout-form-overlay" id="checkout-form-overlay">
+        <div class="checkout-form-container">
+            <h2 class="checkout-form-title">Finaliser votre commande</h2>
+            <form id="checkout-form">
+                <div class="form-group">
+                    <label for="customer-name">Nom complet</label>
+                    <input type="text" id="customer-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="customer-phone">Numéro de téléphone</label>
+                    <input type="tel" id="customer-phone" required>
+                </div>
+                <div class="form-group">
+                    <label for="customer-address">Adresse de livraison</label>
+                    <textarea id="customer-address" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="customer-notes">Notes supplémentaires (optionnel)</label>
+                    <textarea id="customer-notes"></textarea>
+                </div>
+                <div class="form-buttons">
+                    <button type="submit" class="submit-order">Confirmer la commande</button>
+                    <button type="button" class="cancel-order" id="cancel-order">Annuler</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Contact Hero -->
+    <section class="contact-hero">
+        <div class="container hero-content">
+            <h1>Contactez-nous</h1>
+            <p>Nous sommes à votre écoute pour répondre à toutes vos questions et vous accompagner dans votre expérience Musk & Amber.</p>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section class="contact-section">
+        <div class="container">
+            <h2 class="section-title">Entrons en contact</h2>
+            
+            <div class="contact-container">
+                <!-- Contact Info -->
+                <div class="contact-info">
+                    <h2>Nos coordonnées</h2>
+                    <p>Notre équipe est disponible pour vous aider du lundi au samedi. N'hésitez pas à nous contacter pour toute question concernant nos produits, commandes ou collaborations.</p>
+                    
+                    <div class="contact-details">
+                        <div class="contact-item">
+                            <div class="contact-icon">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </div>
+                            <div class="contact-text">
+                                <h3>Notre adresse</h3>
+                                <p>Maroc</p>
+                            </div>
+                        </div>
+                        
+                        <div class="contact-item">
+                            <div class="contact-icon">
+                                <i class="fas fa-phone"></i>
+                            </div>
+                            <div class="contact-text">
+                                <h3>Téléphone</h3>
+                                <p> 0668313435 <br>Disponible du lundi au samedi</p>
+                            </div>
+                        </div>
+                        
+                        
+                        
+                    </div>
+                </div>
+
+                <!-- Contact Form -->
+                <div class="contact-form-container">
+                    <h2>Envoyez-nous un message</h2>
+                    <form id="contact-form">
+                        <div class="form-group">
+                            <label for="name">Nom complet *</label>
+                            <input type="text" id="name" class="form-control" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="email">Adresse email *</label>
+                            <input type="email" id="email" class="form-control" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="phone">Numéro de téléphone</label>
+                            <input type="tel" id="phone" class="form-control">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="subject">Sujet *</label>
+                            <select id="subject" class="form-control" required>
+                                <option value="">Sélectionnez un sujet</option>
+                                <option value="commande">Question sur une commande</option>
+                                <option value="produit">Information sur un produit</option>
+                                <option value="livraison">Livraison et suivi</option>
+                                <option value="retour">Retour et échange</option>
+                                <option value="collaboration">Collaboration commerciale</option>
+                                <option value="autre">Autre demande</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="message">Message *</label>
+                            <textarea id="message" class="form-control" required></textarea>
+                        </div>
+                        
+                        <button type="submit" class="submit-btn">Envoyer le message</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="faq-section">
+        <div class="container">
+            <h2 class="section-title">Questions fréquentes</h2>
+            <div class="faq-container">
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>Quels sont les délais de livraison ?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Les délais de livraison varient selon votre localisation : 2-3 jours ouvrés pour Rabat, 3-5 jours pour les autres villes marocaines, et 7-10 jours pour l'international. Vous recevrez un numéro de suivi par email dès l'expédition.</p>
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>Comment retourner un produit ?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Vous avez 14 jours pour retourner un produit non utilisé et dans son emballage d'origine. Contactez notre service client pour obtenir un numéro de retour. Les frais de retour sont à votre charge sauf en cas d'erreur de notre part.</p>
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>Quels sont vos moyens de paiement ?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Nous acceptons les virements bancaires, et le paiement à la livraison pour certaines régions.</p>
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>Proposez-vous des échantillons ?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Oui ! Pour chaque commande, nous ajoutons gratuitement 2 échantillons de parfums de notre collection. Vous pouvez également acheter notre coffret découverte qui contient 8 échantillons de nos fragrances les plus populaires.</p>
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>Comment conserver mes parfums ?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Pour préserver la qualité de vos parfums, conservez-les à l'abri de la lumière directe du soleil, dans un endroit frais et sec (entre 15°C et 25°C). Évitez les variations brusques de température et refermez bien les flacons après usage.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Map Section -->
+
+
+    <!-- Newsletter -->
+    <section class="newsletter">
+        <div class="container">
+            <h2>Restez connecté</h2>
+            <p>Inscrivez-vous à notre newsletter pour recevoir nos nouveautés, conseils parfumés et offres exclusives.</p>
+            <form class="newsletter-form">
+                <input type="email" class="newsletter-input" placeholder="Votre adresse email" required>
+                <button type="submit" class="newsletter-button">S'abonner</button>
+            </form>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>Musk & Amber</h3>
+                    <p>Votre destination pour des fragrances de luxe exceptionnelles qui éveillent les sens et expriment votre personnalité unique.</p>
+                    <div class="social-icons">
+                        
+                        <a href="https://www.instagram.com/musk_and_amber_lovers/"><i class="fab fa-instagram"></i></a>
+                        <a href="https://www.tiktok.com/@muskwamber"><i class="fab fa-tiktok"></i></a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h3>Liens rapides</h3>
+                    <ul>
+                        <li><a href="index.html">Accueil</a></li>
+                        <li><a href="Categories.html">Catégories</a></li>
+                        <li><a href="nouveautes.html">Nouveautés</a></li>
+                        <li><a href="about.html">À propos</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Informations</h3>
+                    <ul>
+                        <li><a href="about.html">À propos de nous</a></li>
+                        <li><a href="Contact.html">Contact</a></li>
+                      
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Contact</h3>
+                    <ul>
+                        <li><i class="fas fa-phone"></i>  0668313435 </li>
+                    
+                        <li><i class="fas fa-map-marker-alt"></i> Maroc</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2025 Musk & Amber. Tous droits réservés.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+         const firebaseConfig = {
+            apiKey: "AIzaSyDxHAlR86M1U_-sBdLtZ6nEh0ssUREQY5M",
+            authDomain: "muskandamber-83cd8.firebaseapp.com",
+            projectId: "muskandamber-83cd8",
+            storageBucket: "muskandamber-83cd8.firebasestorage.app",
+            messagingSenderId: "820622006518",
+            appId: "1:820622006518:web:540280c4c18f2e94ac74d7",
+            measurementId: "G-58WS7ZEYG3"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        let cart = JSON.parse(localStorage.getItem('muskandamber-cart')) || [];
+
+        // DOM Elements
+        const cartIcon = document.getElementById('cart-icon');
+        const cartCount = document.querySelector('.cart-count');
+        const cartSidebar = document.getElementById('cart-sidebar');
+        const closeCart = document.getElementById('close-cart');
+        const cartItems = document.getElementById('cart-items');
+        const cartTotalPrice = document.getElementById('cart-total-price');
+        const checkoutBtn = document.getElementById('checkout-btn');
+        const cartOverlay = document.getElementById('cart-overlay');
+        const hamburgerMenu = document.getElementById('hamburger-menu');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const closeMenu = document.getElementById('close-menu');
+        const menuOverlay = document.getElementById('menu-overlay');
+        const checkoutFormOverlay = document.getElementById('checkout-form-overlay');
+        const checkoutForm = document.getElementById('checkout-form');
+        const cancelOrderBtn = document.getElementById('cancel-order');
+        const mobileNouveautes = document.getElementById('mobile-nouveautes');
+        const contactForm = document.getElementById('contact-form');
+        const faqItems = document.querySelectorAll('.faq-item');
+        
+        // FIXED: These elements now exist in the HTML
+        const formLoading = document.getElementById('form-loading');
+        const submitContactBtn = document.getElementById('submit-contact-btn');
+        const btnText = document.getElementById('btn-text');
+
+        // ========== DOMContentLoaded event ==========
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Contact page loaded');
+            
+            // Test Firebase connection
+            console.log('Firebase initialized:', firebase.app().name);
+            
+            // Initialize cart functionality
+            initCart();
+            updateCartUI();
+            
+            // Initialize mobile menu
+            initMobileMenu();
+            
+            // Initialize checkout form
+            initCheckoutForm();
+            
+            // Initialize FAQ accordion
+            initFAQ();
+            
+            // Initialize contact form
+            initContactForm();
+        });
+
+        // Initialize mobile menu
+        function initMobileMenu() {
+            // Open mobile menu
+            hamburgerMenu.addEventListener('click', function() {
+                mobileMenu.classList.add('active');
+                menuOverlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            });
+            
+            // Close mobile menu
+            closeMenu.addEventListener('click', function() {
+                mobileMenu.classList.remove('active');
+                menuOverlay.classList.remove('active');
+                document.body.style.overflow = '';
+            });
+            
+            menuOverlay.addEventListener('click', function() {
+                mobileMenu.classList.remove('active');
+                menuOverlay.classList.remove('active');
+                document.body.style.overflow = '';
+            });
+            
+            // Toggle dropdown on mobile
+  
+        }
+        // Category Filtering Functions
+function navigateToCategory(categoryKey) {
+    // Save the selected category to localStorage
+    localStorage.setItem('selectedCategory', categoryKey);
+    
+    // Navigate to the categories page
+    window.location.href = 'Categories.html';
+}
+
+// Get category display name
+function getCategoryDisplayName(categoryKey) {
+    const categoryMap = {
+        'femme': 'Parfums Femme',
+        'homme': 'Parfums Homme',
+        'arabes': 'Parfums Arabes',
+        'niches': 'Parfums de niches',
+        'coffrets': 'Coffrets Cadeaux',
+        'nouveautes': 'Nouveautés'
+    };
+    
+    return categoryMap[categoryKey] || categoryKey.charAt(0).toUpperCase() + categoryKey.slice(1);
+}
+
+// Get category description
+function getCategoryDescription(categoryKey) {
+    const descriptionMap = {
+        'femme': 'Des fragrances délicates et envoûtantes pour la femme moderne',
+        'homme': 'Des essences boisées et sophistiquées pour l\'homme élégant',
+        'arabes': 'Des fragrances orientales riches en oud et en notes épicées',
+        'niches': 'Des créations exclusives et rares pour les connaisseurs',
+        'coffrets': 'Des ensembles cadeaux parfaits pour toutes les occasions',
+        'nouveautes': 'Découvrez nos dernières arrivées et créations exclusives'
+    };
+    
+    return descriptionMap[categoryKey] || 'Découvrez notre collection de produits dans cette catégorie';
+}
+
+// Simple version for menu items - just navigates to categories page with filter
+function filterByCategory(categoryKey) {
+    navigateToCategory(categoryKey);
+}
+
+// If you want to add category filtering on the current page without navigation:
+function filterCurrentPageByCategory(categoryKey) {
+    // This function filters products on the current page by category
+    // You'll need to have products loaded on the page for this to work
+    
+    console.log(`Filtering by category: ${categoryKey}`);
+    
+    // Get all product cards
+    const productCards = document.querySelectorAll('.product-card');
+    
+    if (productCards.length === 0) {
+        console.log('No products found on this page');
+        return;
+    }
+    
+    // Show/hide products based on category
+    productCards.forEach(card => {
+        const productCategory = card.getAttribute('data-category') || 
+                               card.querySelector('.product-category')?.textContent?.toLowerCase() || '';
+        
+        if (categoryKey === 'all' || productCategory.includes(categoryKey)) {
+            card.style.display = 'block';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+    
+    // Update page title or show filtered message
+    const categoryName = getCategoryDisplayName(categoryKey);
+    console.log(`Now showing: ${categoryName}`);
+}
+
+// Mobile menu category links setup
+function setupMobileCategoryLinks() {
+    // Get all mobile menu category links
+    const mobileCategoryLinks = document.querySelectorAll('.mobile-menu a[onclick*="filterByCategory"]');
+    
+    mobileCategoryLinks.forEach(link => {
+        // Remove existing onclick and add new event listener
+        const oldOnClick = link.getAttribute('onclick');
+        link.removeAttribute('onclick');
+        
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Extract category from the old onclick attribute
+            const match = oldOnClick?.match(/filterByCategory\('([^']+)'\)/);
+            if (match && match[1]) {
+                const category = match[1];
+                navigateToCategory(category);
+                
+                // Close mobile menu if open
+                const mobileMenu = document.getElementById('mobile-menu');
+                const menuOverlay = document.getElementById('menu-overlay');
+                
+                if (mobileMenu && mobileMenu.classList.contains('active')) {
+                    mobileMenu.classList.remove('active');
+                    if (menuOverlay) menuOverlay.classList.remove('active');
+                    document.body.style.overflow = '';
+                }
+            }
+        });
+    });
+}
+// ========== ADD PROMOTION FILTER TO MOBILE MENU ==========
+function addPromotionFilterToMenu() {
+    // Add promotion filter to mobile menu if it exists
+    const mobileMenuList = document.querySelector('.mobile-menu ul');
+    if (mobileMenuList) {
+        // Check if promotion filter already exists
+        const existingPromotionItem = mobileMenuList.querySelector('a[onclick*="filterByPromotion"]');
+        if (!existingPromotionItem) {
+            const promotionItem = document.createElement('li');
+            promotionItem.innerHTML = `
+                <a href="javascript:void(0)" onclick="filterByPromotion()">
+                    <i class="fas fa-tag"></i> Promotion
+                </a>
+            `;
+            
+            // Insert after the "Parfums de niche" link or before "À propos de nous"
+            const nicheLink = mobileMenuList.querySelector('a[onclick*="filterByCategory(\'niches\')"]');
+            const aboutLink = mobileMenuList.querySelector('a[href="about.html"]');
+            
+            if (nicheLink) {
+                // Insert after niche link
+                nicheLink.parentElement.after(promotionItem);
+            } else if (aboutLink) {
+                // Insert before about link
+                aboutLink.parentElement.before(promotionItem);
+            } else {
+                // Append to the end
+                mobileMenuList.appendChild(promotionItem);
+            }
+        }
+    }
+}
+
+// ========== FILTER BY PROMOTION FUNCTION ==========
+function filterByPromotion() {
+    // First, check if we're on the categories page or nouveautés page
+    const currentPage = window.location.pathname.split('/').pop();
+    
+    if (currentPage === 'Categories.html') {
+        // Handle promotion filter for categories page
+        currentPromotionFilter = true;
+        currentCategory = 'promotion';
+        
+        // Update UI
+        const categoryInfoContainer = document.getElementById('category-info-container');
+        const currentCategoryTitle = document.getElementById('current-category-title');
+        const currentCategoryDescription = document.getElementById('current-category-description');
+        const productsTitle = document.getElementById('products-title');
+        
+        if (categoryInfoContainer) categoryInfoContainer.style.display = 'block';
+        if (currentCategoryTitle) currentCategoryTitle.textContent = 'Promotions';
+        if (currentCategoryDescription) currentCategoryDescription.textContent = 'Profitez de nos offres spéciales et produits en promotion';
+        if (productsTitle) productsTitle.textContent = 'Produits en Promotion';
+        
+        // Filter products
+        if (allProductsList) {
+            const promotionProducts = allProductsList.filter(product => {
+                const stockStatuses = getProductStockStatuses(product);
+                return stockStatuses.includes('promotion');
+            });
+            
+            // Display filtered products
+            if (typeof displayProducts === 'function') {
+                displayProducts(promotionProducts);
+            }
+        }
+        
+        // Clear search
+        const searchInput = document.getElementById('productSearch');
+        if (searchInput) searchInput.value = '';
+        
+    } else if (currentPage === 'nouveautés.html' || currentPage === 'nouveautes.html') {
+        // Handle promotion filter for nouveautés page
+        // You can add specific logic for nouveautés page here
+        showNotification('Filtre Promotion activé - Affichage des produits en promotion', 'info');
+        
+        // If you want to filter on nouveautés page, you can implement similar logic
+        // Or redirect to categories page with promotion filter
+        localStorage.setItem('selectedCategory', 'promotion');
+        window.location.href = 'Categories.html';
+        
+    } else {
+        // For other pages, redirect to categories page with promotion filter
+        localStorage.setItem('selectedCategory', 'promotion');
+        window.location.href = 'Categories.html';
+    }
+    
+    // Close mobile menu if open
+    const mobileMenu = document.getElementById('mobile-menu');
+    const menuOverlay = document.getElementById('menu-overlay');
+    
+    if (mobileMenu && mobileMenu.classList.contains('active')) {
+        mobileMenu.classList.remove('active');
+        if (menuOverlay) menuOverlay.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+}
+
+// ========== GET PRODUCT STOCK STATUSES FUNCTION ==========
+function getProductStockStatuses(product) {
+    if (product.stockStatuses && Array.isArray(product.stockStatuses)) {
+        // New format: array of stock statuses
+        return product.stockStatuses;
+    } else if (product.stockStatus && Array.isArray(product.stockStatus)) {
+        // Alternative: stockStatus as array
+        return product.stockStatus;
+    } else if (product.stockStatus && typeof product.stockStatus === 'string') {
+        // Old format: single string
+        return [product.stockStatus];
+    } else if (product.stockStatuses && typeof product.stockStatuses === 'string') {
+        // Alternative: stockStatuses as string
+        return [product.stockStatuses];
+    } else {
+        // Default: en stock
+        return ['en stock'];
+    }
+}
+
+// ========== UPDATE MOBILE MENU IN ALL PAGES ==========
+function updateMobileMenuWithPromotion() {
+    // This function should be called on DOMContentLoaded for each page
+    addPromotionFilterToMenu();
+}
+
+// ========== ADD TO DOMContentLoaded ==========
+// Add this to your existing DOMContentLoaded event in each page:
+document.addEventListener('DOMContentLoaded', function() {
+    // ... your existing initialization code ...
+    
+    // Add promotion filter to mobile menu
+    updateMobileMenuWithPromotion();
+    
+    // ... rest of your code ...
+});
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Setup mobile category links
+    setupMobileCategoryLinks();
+    
+    // If you want to add category filtering to desktop menu too:
+    const desktopCategoryLinks = document.querySelectorAll('.desktop-nav a[onclick*="filterByCategory"]');
+    desktopCategoryLinks.forEach(link => {
+        // Remove existing onclick and add new event listener
+        const oldOnClick = link.getAttribute('onclick');
+        link.removeAttribute('onclick');
+        
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Extract category from the old onclick attribute
+            const match = oldOnClick?.match(/filterByCategory\('([^']+)'\)/);
+            if (match && match[1]) {
+                const category = match[1];
+                navigateToCategory(category);
+            }
+        });
+    });
+});
+
+// If you want to add a "Clear Filter" button on category pages:
+function clearCategoryFilter() {
+    // Clear the category filter
+    localStorage.removeItem('selectedCategory');
+    
+    // If on categories page, reload to show all products
+    if (window.location.pathname.includes('Categories.html')) {
+        window.location.reload();
+    }
+}
+
+// Export functions if using modules
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        navigateToCategory,
+        getCategoryDisplayName,
+        getCategoryDescription,
+        filterByCategory,
+        filterCurrentPageByCategory,
+        clearCategoryFilter
+    };
+}
+
+        // Initialize FAQ accordion
+        function initFAQ() {
+            faqItems.forEach(item => {
+                const question = item.querySelector('.faq-question');
+                question.addEventListener('click', () => {
+                    // Close other FAQ items
+                    faqItems.forEach(otherItem => {
+                        if (otherItem !== item) {
+                            otherItem.classList.remove('active');
+                        }
+                    });
+                    
+                    // Toggle current FAQ item
+                    item.classList.toggle('active');
+                });
+            });
+        }
+
+        // Initialize contact form - FIXED VERSION
+        function initContactForm() {
+            if (!contactForm) {
+                console.error('Contact form not found!');
+                return;
+            }
+            
+            contactForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                console.log('Contact form submitted');
+                
+                // Show loading state
+                if (formLoading) formLoading.classList.add('active');
+                if (submitContactBtn) submitContactBtn.disabled = true;
+                if (btnText) btnText.textContent = 'Envoi en cours...';
+                
+                const name = document.getElementById('name')?.value.trim() || '';
+                const email = document.getElementById('email')?.value.trim() || '';
+                const phone = document.getElementById('phone')?.value.trim() || '';
+                const subject = document.getElementById('subject')?.value || '';
+                const message = document.getElementById('message')?.value.trim() || '';
+                
+                // Validate required fields
+                if (!name || !email || !subject || !message) {
+                    showNotification('Veuillez remplir tous les champs obligatoires (*)', 'error');
+                    if (formLoading) formLoading.classList.remove('active');
+                    if (submitContactBtn) submitContactBtn.disabled = false;
+                    if (btnText) btnText.textContent = 'Envoyer le message';
+                    return;
+                }
+                
+                // Email validation
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(email)) {
+                    showNotification('Veuillez entrer une adresse email valide', 'error');
+                    if (formLoading) formLoading.classList.remove('active');
+                    if (submitContactBtn) submitContactBtn.disabled = false;
+                    if (btnText) btnText.textContent = 'Envoyer le message';
+                    return;
+                }
+                
+                const contactData = {
+                    name: name,
+                    email: email,
+                    phone: phone || 'Non fourni',
+                    subject: subject,
+                    message: message,
+                    date: new Date().toISOString(),
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    status: 'new', // new, read, replied, archived
+                    read: false,
+                    replied: false
+                };
+                
+                console.log('Saving contact data:', contactData);
+                
+                try {
+                    // Save to Firebase Firestore
+                    const docRef = await db.collection('contactMessages').add(contactData);
+
+                    console.log('Document written with ID:', docRef.id);
+                    
+                    // Show success message
+                    showNotification('✅ Votre message a été envoyé avec succès ! Nous vous répondrons dans les plus brefs délais.', 'success');
+                    
+                    // Reset form
+                    contactForm.reset();
+                    
+                } catch (error) {
+                    console.error('Error sending message:', error);
+                    
+                    // More detailed error message
+                    let errorMessage = 'Une erreur est survenue lors de l\'envoi du message. ';
+                    
+                    if (error.code === 'permission-denied') {
+                        errorMessage += 'Permission refusée. Vérifiez les règles Firestore.';
+                        console.error('Firestore rules issue. Update rules in Firebase Console.');
+                    } else if (error.code === 'unavailable') {
+                        errorMessage += 'Service temporairement indisponible. Veuillez réessayer.';
+                    } else {
+                        errorMessage += 'Veuillez réessayer. Code d\'erreur: ' + error.code;
+                    }
+                    
+                    showNotification(errorMessage, 'error');
+                    
+                } finally {
+                    // Hide loading state
+                    if (formLoading) formLoading.classList.remove('active');
+                    if (submitContactBtn) submitContactBtn.disabled = false;
+                    if (btnText) btnText.textContent = 'Envoyer le message';
+                }
+            });
+        }
+
+        // Initialize cart functionality
+        function initCart() {
+            // Cart icon click event
+            cartIcon.addEventListener('click', function() {
+                cartSidebar.classList.add('active');
+                cartOverlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            });
+
+            // Close cart events
+            closeCart.addEventListener('click', function() {
+                cartSidebar.classList.remove('active');
+                cartOverlay.classList.remove('active');
+                document.body.style.overflow = '';
+            });
+
+            cartOverlay.addEventListener('click', function() {
+                cartSidebar.classList.remove('active');
+                cartOverlay.classList.remove('active');
+                document.body.style.overflow = '';
+            });
+
+            // Checkout button
+            checkoutBtn.addEventListener('click', function() {
+                if (cart.length === 0) {
+                    showNotification('Votre panier est vide', 'error');
+                    return;
+                }
+                checkoutFormOverlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            });
+        }
+
+        // Initialize checkout form
+        function initCheckoutForm() {
+            // Cancel order button
+            cancelOrderBtn.addEventListener('click', function() {
+                checkoutFormOverlay.classList.remove('active');
+                document.body.style.overflow = '';
+            });
+
+            // Form submission
+            checkoutForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                submitOrder();
+            });
+
+            // Close checkout form when clicking outside
+            checkoutFormOverlay.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.remove('active');
+                    document.body.style.overflow = '';
+                }
+            });
+        }
+
+        // Update cart UI
+        function updateCartUI() {
+    // Update cart count
+    const totalItems = cart.reduce((total, item) => total + item.quantity, 0);
+    cartCount.textContent = totalItems;
+    
+    // Update cart items
+    cartItems.innerHTML = '';
+    
+    if (cart.length === 0) {
+        cartItems.innerHTML = `
+            <div class="empty-cart">
+                <i class="fas fa-shopping-bag"></i>
+                <p>Votre panier est vide</p>
+            </div>
+        `;
+    } else {
+        cart.forEach((item, index) => {
+            const cartItem = document.createElement('div');
+            cartItem.className = 'cart-item';
+            
+            // Display brand if available
+            const brandDisplay = item.brand ? `<div class="cart-item-brand" style="font-size: 12px; color: #666; margin-bottom: 5px;">${item.brand}</div>` : '';
+            
+            cartItem.innerHTML = `
+                <div class="cart-item-image" style="background-image: url('${item.imageUrl}');"></div>
+                <div class="cart-item-details">
+                    ${brandDisplay}
+                    <div class="cart-item-name">${item.name}</div>
+                    <div class="cart-item-price" style="color: #e74c3c; font-weight: bold;">${item.price.toFixed(2)} MAD</div>
+                    <div class="cart-item-size">
+                        <small>Volume: ${item.size || item.volume || '50ml'}</small>
+                        <div class="size-options">
+                            <span class="size-option ${item.size === item.size ? 'selected' : ''}" 
+                                  data-index="${index}" data-size="${item.size}">
+                                ${item.size}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="cart-item-controls">
+                        <button class="quantity-btn decrease-quantity" data-index="${index}">-</button>
+                        <span class="cart-item-quantity">${item.quantity}</span>
+                        <button class="quantity-btn increase-quantity" data-index="${index}">+</button>
+                        <button class="remove-item" data-index="${index}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            cartItems.appendChild(cartItem);
+        });
+        
+        // Add event listeners for size options
+        document.querySelectorAll('.size-option').forEach(option => {
+            option.addEventListener('click', function() {
+                const index = parseInt(this.getAttribute('data-index'));
+                const size = this.getAttribute('data-size');
+                updateCartItemSize(index, size);
+            });
+        });
+        
+        // Add event listeners for quantity buttons
+        document.querySelectorAll('.decrease-quantity').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const index = parseInt(this.getAttribute('data-index'));
+                updateQuantity(index, -1);
+            });
+        });
+        
+        document.querySelectorAll('.increase-quantity').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const index = parseInt(this.getAttribute('data-index'));
+                updateQuantity(index, 1);
+            });
+        });
+        
+        document.querySelectorAll('.remove-item').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const index = parseInt(this.getAttribute('data-index'));
+                removeFromCart(index);
+            });
+        });
+    }
+    
+    // Update total price
+    const totalPrice = cart.reduce((total, item) => {
+        return total + (item.price * item.quantity);
+    }, 0);
+    cartTotalPrice.textContent = `${totalPrice.toFixed(2)} MAD`;
+}
+
+function updateCartItemSize(index, size) {
+    if (cart[index]) {
+        cart[index].size = size;
+        saveCartToStorage();
+        updateCartUI();
+    }
+}
+
+function saveCartToStorage() {
+    localStorage.setItem('muskandamber-cart', JSON.stringify(cart));
+}
+
+function updateQuantity(index, change) {
+    if (cart[index]) {
+        cart[index].quantity += change;
+        
+        if (cart[index].quantity <= 0) {
+            removeFromCart(index);
+        } else {
+            saveCartToStorage();
+            updateCartUI();
+        }
+    }
+}
+
+function removeFromCart(index) {
+    if (cart[index]) {
+        const removedItem = cart[index];
+        cart.splice(index, 1);
+        saveCartToStorage();
+        updateCartUI();
+        showNotification(`${removedItem.name} retiré du panier!`);
+    }
+}
+
+        // Submit order
+        async function submitOrder() {
+            const name = document.getElementById('customer-name').value;
+            const phone = document.getElementById('customer-phone').value;
+            const address = document.getElementById('customer-address').value;
+            const notes = document.getElementById('customer-notes').value;
+            
+            const totalPrice = cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+            
+            const order = {
+                customer: { name, phone, address, notes },
+                items: cart,
+                total: totalPrice,
+                status: 'pending',
+                date: new Date().toISOString(),
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                orderNumber: 'ORD-' + Date.now()
+            };
+            
+            try {
+                await db.collection('orders').add(order);
+                showNotification('Commande passée avec succès!', 'success');
+                
+                // Clear cart
+                cart = [];
+                saveCartToStorage();
+                updateCartUI();
+                
+                // Close checkout form
+                checkoutFormOverlay.classList.remove('active');
+                document.body.style.overflow = '';
+                
+                // Clear form
+                checkoutForm.reset();
+            } catch (error) {
+                console.error('Error submitting order:', error);
+                showNotification('Erreur lors de la soumission de la commande', 'error');
+            }
+        }
+
+        // Show notification
+        function showNotification(message, type = 'success') {
+            // Remove existing notification
+            const existingNotification = document.querySelector('.notification');
+            if (existingNotification) {
+                existingNotification.remove();
+            }
+            
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <div class="notification-content">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Remove after 5 seconds
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }, 5000);
+        }
+
+
+    </script>
+</body>
+</html>
+
+
+

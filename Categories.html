@@ -2059,7 +2059,7 @@
             <li><a href="javascript:void(0)" onclick="filterByCategory('femme')">Parfums femme</a></li>
             <li><a href="javascript:void(0)" onclick="filterByCategory('homme')">Parfums homme</a></li>
             <li><a href="javascript:void(0)" onclick="filterByCategory('arabes')">Parfum arabes</a></li>
-            <li><a href="javascript:void(0)" onclick="filterByCategory('niches')">Parfum de niche</a></li>
+            <li><a href="javascript:void(0)" onclick="filterByCategory('niche')">Parfum de niche</a></li>
             <li><a href="about.html">À propos de nous</a></li>
             
             <li><a href="nouveautés.html" id="mobile-nouveautes">Nouveautés </a></li>
@@ -2216,8 +2216,8 @@
         </div>
     </footer>
 
-    <script>
-  const firebaseConfig = {
+   <script>
+const firebaseConfig = {
     apiKey: "AIzaSyDxHAlR86M1U_-sBdLtZ6nEh0ssUREQY5M",
     authDomain: "muskandamber-83cd8.firebaseapp.com",
     projectId: "muskandamber-83cd8",
@@ -2429,34 +2429,41 @@ function checkForCategoryFilter() {
     }
 }
 
-// Get category display name
+// Get category display name (FIXED: use "niche" without 's')
 function getCategoryDisplayName(categoryKey) {
     const categoryMap = {
         'femme': 'Parfums Femme',
         'homme': 'Parfums Homme',
         'arabes': 'Parfums Arabes',
-        'niches': 'Parfums de niche',
+        'niche': 'Parfums de niche', // Use "niche" without 's'
         'coffrets': 'Coffrets Cadeaux',
         'nouveautes': 'Nouveautés',
         'promotion': 'Promotions'
     };
     
-    return categoryMap[categoryKey] || categoryKey.charAt(0).toUpperCase() + categoryKey.slice(1);
+    // Normalize the key - convert "niches" to "niche"
+    const normalizedKey = categoryKey.toLowerCase();
+    const finalKey = normalizedKey === 'niches' ? 'niche' : normalizedKey;
+    
+    return categoryMap[finalKey] || finalKey.charAt(0).toUpperCase() + finalKey.slice(1);
 }
 
-// Get category description
+// Get category description (FIXED: use "niche" without 's')
 function getCategoryDescription(categoryKey) {
     const descriptionMap = {
         'femme': 'Des fragrances délicates et envoûtantes pour la femme moderne',
         'homme': 'Des essences boisées et sophistiquées pour l\'homme élégant',
         'arabes': 'Des fragrances orientales riches en oud et en notes épicées',
-        'niche': 'Des créations exclusives et rares pour les connaisseurs',
+        'niche': 'Des créations exclusives et rares pour les connaisseurs', // Use "niche" without 's'
         'coffrets': 'Des ensembles cadeaux parfaits pour toutes les occasions',
         'nouveautes': 'Découvrez nos dernières arrivées et créations exclusives',
         'promotion': 'Profitez de nos offres spéciales et produits en promotion'
     };
     
-    return descriptionMap[categoryKey] || 'Découvrez notre collection de produits dans cette catégorie';
+    const normalizedKey = categoryKey.toLowerCase();
+    const finalKey = normalizedKey === 'niches' ? 'niche' : normalizedKey;
+    
+    return descriptionMap[finalKey] || 'Découvrez notre collection de produits dans cette catégorie';
 }
 
 // Clear category filter
@@ -2557,16 +2564,19 @@ async function loadProductsFromFirebase() {
     }
 }
 
-// ========== FIXED: Filter by category function ==========
+// ========== Filter by category function ==========
 function filterByCategory(categoryKey) {
     if (typeof categoryKey === 'string') {
         // Reset promotion filter when selecting other category
         currentPromotionFilter = false;
         selectedStockStatuses = [];
         
-        // FIX: Clear the array and add only the new category
-        // Instead of toggling, we replace with the new selection
-        selectedCategories = [categoryKey];
+        // Convert "niches" to "niche" if needed
+        const normalizedKey = categoryKey.toLowerCase();
+        const finalKey = normalizedKey === 'niches' ? 'niche' : normalizedKey;
+        
+        // Clear the array and add only the new category
+        selectedCategories = [finalKey];
         
         // Update UI based on selection
         if (selectedCategories.length === 0) {
@@ -2600,7 +2610,7 @@ function filterByCategory(categoryKey) {
     }
 }
 
-// ========== FIXED: APPLY FILTERS FUNCTION ==========
+// ========== APPLY FILTERS FUNCTION ==========
 function applyFilters() {
     if (!productsContainer || !allProductsList || allProductsList.length === 0) {
         return;
@@ -2609,7 +2619,7 @@ function applyFilters() {
     // Clear the container
     productsContainer.innerHTML = '';
     
-    // FIXED: Filter products based on selected category
+    // Filter products based on selected category
     let filteredProducts = [];
     
     if (selectedCategories.length === 0 && selectedStockStatuses.length === 0) {
@@ -2629,11 +2639,20 @@ function applyFilters() {
             // Check if product matches selected category (if any)
             let categoryMatch = true;
             if (selectedCategories.length > 0) {
-                categoryMatch = selectedCategories.some(cat => {
-                    const normalizedCat = cat.toLowerCase();
-                    return allProductCategories.some(pc => {
-                        if (pc && typeof pc === 'string') {
-                            return pc.toLowerCase().includes(normalizedCat);
+                categoryMatch = selectedCategories.some(selectedCat => {
+                    // Convert selected category to normalized form
+                    const normalizedSelectedCat = selectedCat.toLowerCase();
+                    
+                    return allProductCategories.some(productCat => {
+                        if (productCat && typeof productCat === 'string') {
+                            const normalizedProductCat = productCat.toLowerCase();
+                            
+                            // Handle "niche" category - accept both "niche" and "niches" in database
+                            if (normalizedSelectedCat === 'niche') {
+                                return normalizedProductCat === 'niche' || normalizedProductCat === 'niches';
+                            }
+                            
+                            return normalizedProductCat === 'niche';
                         }
                         return false;
                     });
@@ -2772,15 +2791,22 @@ function createProductCard(product) {
     // Create type badge if product has a type
     let typeBadge = '';
     if (product.type) {
-        const typeClass = `type-${product.type.toLowerCase()}`;
-        const typeName = getTypeDisplayName(product.type);
+        // Normalize type - convert "niches" to "niche"
+        const normalizedType = product.type.toLowerCase();
+        const finalType = normalizedType === 'niches' ? 'niche' : normalizedType;
+        
+        const typeClass = `type-${finalType}`;
+        const typeName = getTypeDisplayName(finalType);
         typeBadge = `<div class="product-badge ${typeClass}">${typeName}</div>`;
     }
     
     // Get brand if available
     const brandDisplay = product.brand ? `<div class="product-brand">${product.brand}</div>` : '';
     
-    // FIXED: Removed categories from product card (before volume display)
+    // FIXED: Normalize category display - convert "niches" to "niche"
+    const categoryDisplay = (product.category || 'Parfum').toLowerCase();
+    const displayCategory = categoryDisplay === 'niches' ? 'niche' : categoryDisplay;
+    
     div.innerHTML = `
         ${promotionBadge}
         ${typeBadge}
@@ -2790,7 +2816,7 @@ function createProductCard(product) {
             </div>
         </div>
         <div class="product-info">
-            <div class="product-category">${product.category || 'Parfum'}</div>
+            <div class="product-category">${displayCategory.charAt(0).toUpperCase() + displayCategory.slice(1)}</div>
             ${brandDisplay}
             <h3 class="product-title">${product.name}</h3>
             <div class="product-price" style="${priceStyle}">${parseFloat(product.price).toFixed(2)} MAD</div>
@@ -2808,16 +2834,19 @@ function createProductCard(product) {
     return div;
 }
 
-// Get type display name
+// Get type display name (FIXED: use "niche" without 's')
 function getTypeDisplayName(type) {
     const typeMap = {
         'homme': 'Homme',
         'femme': 'Femme',
         'arabes': 'Arabe',
-        'niches': 'Niche'
+        'niche': 'Niche'    // Use "niche" without 's'
     };
     
-    return typeMap[type.toLowerCase()] || type.charAt(0).toUpperCase() + type.slice(1);
+    const normalizedType = type.toLowerCase();
+    const finalType = normalizedType === 'niches' ? 'niche' : normalizedType;
+    
+    return typeMap[finalType] || finalType.charAt(0).toUpperCase() + finalType.slice(1);
 }
 
 // ========== CART FUNCTIONS ==========
@@ -3234,6 +3263,10 @@ async function viewProduct(productId) {
             // Get brand if available
             const brandDisplay = product.brand ? `<div class="product-brand-modal">Marque: ${product.brand}</div>` : '';
             
+            // FIXED: Normalize category display - convert "niches" to "niche"
+            const categoryDisplay = (product.category || 'Parfum').toLowerCase();
+            const displayCategory = categoryDisplay === 'niches' ? 'niche' : categoryDisplay;
+            
             // Create stock status display
             let stockStatusDisplay = '';
             stockStatuses.forEach(status => {
@@ -3286,7 +3319,7 @@ async function viewProduct(productId) {
                     </div>
                     <div class="modal-info">
                         ${brandDisplay}
-                        <div class="modal-category">${product.category || 'Parfum'}</div>
+                        <div class="modal-category">${displayCategory.charAt(0).toUpperCase() + displayCategory.slice(1)}</div>
                         <h1 class="modal-title">${product.name}</h1>
                         <div class="modal-price" style="${priceStyle}; font-size: 28px;">${parseFloat(product.price).toFixed(2)} MAD</div>
                         
@@ -3323,34 +3356,49 @@ async function viewProduct(productId) {
                                         ${size}
                                     </div>
                                 `).join('')}
+                            </div>
+                        </div>
+                        
+                        <div class="modal-actions">
+                            <div class="quantity-selector">
+                                <button class="quantity-btn-modal" id="decrease-quantity-modal">-</button>
+                                <span class="quantity-display" id="quantity-display-modal">1</span>
+                                <button class="quantity-btn-modal" id="increase-quantity-modal">+</button>
+                            </div>
+                            <button class="add-to-cart-modal" data-id="${productId}" id="add-to-cart-modal" 
+                                    ${stockStatuses.includes('rupture de stock') ? 'style="background-color: #ccc;"' : ''}>
+                                <i class="fas fa-shopping-cart"></i> ${stockStatuses.includes('rupture de stock') ? 'Rupture de stock' : 'Ajouter au panier'}
+                            </button>
                         </div>
                     </div>
-                    
-                    <div class="modal-actions">
-                        <div class="quantity-selector">
-                            <button class="quantity-btn-modal" id="decrease-quantity-modal">-</button>
-                            <span class="quantity-display" id="quantity-display-modal">1</span>
-                            <button class="quantity-btn-modal" id="increase-quantity-modal">+</button>
-                        </div>
-                        <button class="add-to-cart-modal" data-id="${productId}" id="add-to-cart-modal" 
-                                ${stockStatuses.includes('rupture de stock') ? 'style="background-color: #ccc;"' : ''}>
-                            <i class="fas fa-shopping-cart"></i> ${stockStatuses.includes('rupture de stock') ? 'Rupture de stock' : 'Ajouter au panier'}
+                `;
+                
+                // Add event listeners for modal
+                addModalEventListeners();
+            }
+        } else {
+            if (modalContent) {
+                modalContent.innerHTML = `
+                    <div style="text-align: center; padding: 40px;">
+                        <i class="fas fa-exclamation-circle" style="font-size: 48px; color: #e74c3c; margin-bottom: 20px;"></i>
+                        <h3>Produit non trouvé</h3>
+                        <p>Le produit demandé n'existe pas ou a été supprimé.</p>
+                        <button class="clear-filter-btn" onclick="productModalOverlay.classList.remove('active'); document.body.style.overflow = '';">
+                            <i class="fas fa-times"></i> Fermer
                         </button>
                     </div>
-                </div>
-            `;
-            
-            // Add event listeners for modal
-            addModalEventListeners();
+                `;
+            }
         }
         
-    } else {
+    } catch (error) {
+        console.error('Error loading product details:', error);
         if (modalContent) {
             modalContent.innerHTML = `
                 <div style="text-align: center; padding: 40px;">
-                    <i class="fas fa-exclamation-circle" style="font-size: 48px; color: #e74c3c; margin-bottom: 20px;"></i>
-                    <h3>Produit non trouvé</h3>
-                    <p>Le produit demandé n'existe pas ou a été supprimé.</p>
+                    <i class="fas fa-exclamation-triangle" style="font-size: 48px; color: #f39c12; margin-bottom: 20px;"></i>
+                    <h3>Erreur de chargement</h3>
+                    <p>Impossible de charger les détails du produit. Veuillez réessayer.</p>
                     <button class="clear-filter-btn" onclick="productModalOverlay.classList.remove('active'); document.body.style.overflow = '';">
                         <i class="fas fa-times"></i> Fermer
                     </button>
@@ -3358,22 +3406,6 @@ async function viewProduct(productId) {
             `;
         }
     }
-    
-} catch (error) {
-    console.error('Error loading product details:', error);
-    if (modalContent) {
-        modalContent.innerHTML = `
-            <div style="text-align: center; padding: 40px;">
-                <i class="fas fa-exclamation-triangle" style="font-size: 48px; color: #f39c12; margin-bottom: 20px;"></i>
-                <h3>Erreur de chargement</h3>
-                <p>Impossible de charger les détails du produit. Veuillez réessayer.</p>
-                <button class="clear-filter-btn" onclick="productModalOverlay.classList.remove('active'); document.body.style.overflow = '';">
-                    <i class="fas fa-times"></i> Fermer
-                </button>
-            </div>
-        `;
-    }
-}
 }
 
 function addModalEventListeners() {
@@ -3505,4 +3537,5 @@ function showNotification(message, type = 'success') {
 </script>
 </body>
 </html>
+
 

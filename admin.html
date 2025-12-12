@@ -1053,8 +1053,8 @@
                                     <label for="cat-homme">Parfums Homme</label>
                                 </div>
                                 <div class="checkbox-item">
-                                    <input type="checkbox" id="cat-niches" value="niches">
-                                    <label for="cat-niches">Parfums de niche</label>
+                                    <input type="checkbox" id="cat-niche" value="niche">
+                                    <label for="cat-niche">Parfums de niche</label>
                                 </div>
                                 <div class="checkbox-item">
                                     <input type="checkbox" id="cat-coffrets" value="coffrets">
@@ -1261,7 +1261,7 @@
 
   <script>
      
-   // ========== CONFIGURATION ==========
+ // ========== CONFIGURATION ==========
 const firebaseConfig = {
     apiKey: "AIzaSyDxHAlR86M1U_-sBdLtZ6nEh0ssUREQY5M",
     authDomain: "muskandamber-83cd8.firebaseapp.com",
@@ -1289,6 +1289,22 @@ let allOrders = [];
 let allMessages = [];
 let isEditMode = false;
 let currentEditProductId = null;
+
+// ========== CATEGORY NORMALIZATION FUNCTION ==========
+function normalizeCategories(categories) {
+    if (!categories) return [];
+    
+    // Convert to array if it's a string
+    const categoryArray = Array.isArray(categories) 
+        ? categories 
+        : (typeof categories === 'string' ? categories.split(',') : []);
+    
+    // Normalize "niches" to "niche" and trim whitespace
+    return categoryArray.map(cat => {
+        const trimmed = cat.trim();
+        return trimmed.toLowerCase() === 'niches' ? 'niche' : trimmed;
+    }).filter(cat => cat.length > 0);
+}
 
 // ========== MULTIPLE IMAGE UPLOAD ==========
 function handleMultipleImagesSelect(event) {
@@ -1443,10 +1459,13 @@ async function addProduct() {
             stockStatuses.push('en stock');
         }
 
-        // Get selected categories
+        // Get selected categories (FIXED: ensure "niche" not "niches")
         const categories = [];
         const checkboxes = document.querySelectorAll('.checkbox-group input[type="checkbox"]:checked');
-        checkboxes.forEach(cb => categories.push(cb.value));
+        checkboxes.forEach(cb => {
+            const value = cb.value === 'niches' ? 'niche' : cb.value;
+            categories.push(value);
+        });
         
         if (categories.length === 0) {
             showNotification('Veuillez sélectionner au moins une catégorie', 'warning');
@@ -1575,7 +1594,8 @@ function displayProducts(products) {
     let html = '<div class="products-grid">';
     
     products.forEach(p => {
-        const categories = p.categories || (p.category ? p.category.split(',') : []);
+        // Use normalized categories (FIXED: ensures "niche" not "niches")
+        const categories = normalizeCategories(p.categories || p.category);
         const categoryBadges = categories.map(cat => 
             `<span style="background:#f0f0f0;padding:2px 8px;border-radius:12px;font-size:12px;margin-right:5px;">${cat}</span>`
         ).join('');
@@ -1695,10 +1715,11 @@ function editProduct(productId) {
         checkbox.checked = productStockStatuses.includes(checkbox.value);
     });
     
-    // Set categories checkboxes
-    const categories = product.categories || (product.category ? product.category.split(',') : []);
+    // Set categories checkboxes (FIXED: normalize for display)
+    const categories = normalizeCategories(product.categories || product.category);
     document.querySelectorAll('.checkbox-group input[type="checkbox"]').forEach(checkbox => {
-        checkbox.checked = categories.includes(checkbox.value);
+        const checkboxValue = checkbox.value === 'niches' ? 'niche' : checkbox.value;
+        checkbox.checked = categories.includes(checkboxValue);
     });
     
     // Display existing images
@@ -1766,10 +1787,13 @@ async function updateProduct(productId) {
             stockStatuses.push('en stock');
         }
 
-        // Get selected categories
+        // Get selected categories (FIXED: ensure "niche" not "niches")
         const categories = [];
         const checkboxes = document.querySelectorAll('.checkbox-group input[type="checkbox"]:checked');
-        checkboxes.forEach(cb => categories.push(cb.value));
+        checkboxes.forEach(cb => {
+            const value = cb.value === 'niches' ? 'niche' : cb.value;
+            categories.push(value);
+        });
         
         if (categories.length === 0) {
             showNotification('Veuillez sélectionner au moins une catégorie', 'warning');
@@ -1827,6 +1851,62 @@ async function deleteProduct(id) {
     }
 }
 
+// ========== DATABASE MIGRATION FUNCTION ==========
+async function fixExistingProductCategories() {
+    if (!confirm('Voulez-vous normaliser toutes les catégories "niches" en "niche" dans la base de données?\nCette action peut prendre quelques secondes.')) {
+        return;
+    }
+    
+    try {
+        showNotification('Début de la normalisation des catégories...', 'info');
+        
+        const snapshot = await db.collection('products').get();
+        const batch = db.batch();
+        let updatedCount = 0;
+        
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            const currentCategories = normalizeCategories(data.categories || data.category);
+            
+            // Check if any category contains "niches"
+            const hasNiches = currentCategories.some(cat => 
+                cat.toLowerCase() === 'niches'
+            );
+            
+            if (hasNiches) {
+                const updatedCategories = normalizeCategories(currentCategories);
+                
+                batch.update(doc.ref, {
+                    categories: updatedCategories,
+                    category: updatedCategories.join(','),
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                updatedCount++;
+                console.log(`Will update product ${doc.id}: ${currentCategories} → ${updatedCategories}`);
+            }
+        });
+        
+        if (updatedCount > 0) {
+            await batch.commit();
+            console.log(`Updated ${updatedCount} products with normalized categories`);
+            showNotification(`✅ ${updatedCount} produits mis à jour avec succès!\nRafraîchissez la page pour voir les changements.`, 'success');
+            
+            // Reload products to show updated categories
+            setTimeout(() => {
+                loadProductsFromFirebase();
+            }, 1000);
+        } else {
+            console.log('No products needed category normalization');
+            showNotification('✅ Toutes les catégories sont déjà normalisées!', 'success');
+        }
+        
+    } catch(err) {
+        console.error('Error fixing categories:', err);
+        showNotification('❌ Erreur lors de la normalisation des catégories: ' + err.message, 'error');
+    }
+}
+
 // ========== ORDERS MANAGEMENT ==========
 async function loadOrders() {
     try {
@@ -1847,11 +1927,9 @@ async function loadOrders() {
         
         snapshot.forEach(doc => {
             const data = doc.data();
-            console.log('Raw order data:', doc.id, JSON.parse(JSON.stringify(data)));
             
             // Get customer object from data
             const customer = data.customer || {};
-            console.log('Customer object:', JSON.parse(JSON.stringify(customer)));
             
             // Enhanced data normalization - FIXED FOR NESTED CUSTOMER OBJECT
             const orderData = {
@@ -1868,7 +1946,7 @@ async function loadOrders() {
                 // Normalize items
                 items: data.items || data.products || data.orderItems || data.article || [],
                 
-                // FIXED: Extract customer info from nested customer object
+                // Extract customer info from nested customer object
                 fullName: customer.fullName || customer.name || customer.customerName || 
                          customer.nom || customer.nomComplet || 
                          (customer.firstName && customer.lastName ? `${customer.firstName} ${customer.lastName}` : '') ||
@@ -1877,12 +1955,10 @@ async function loadOrders() {
                 email: customer.email || customer.customerEmail || customer.courriel || 
                       data.email || data.customerEmail || '',
                 
-                // FIXED: Phone number fields from customer object
                 phone: customer.phone || customer.customerPhone || customer.telephone || 
                       customer.numeroTelephone || customer.numTel || 
                       data.phone || data.customerPhone || '',
                 
-                // FIXED: Address fields from customer object
                 address: customer.address || customer.shippingAddress || customer.deliveryAddress || 
                         customer.adresse || customer.adresseLivraison ||
                         data.address || data.shippingAddress || '',
@@ -1894,16 +1970,6 @@ async function loadOrders() {
                           customer.postal || customer.zip ||
                           data.postalCode || data.zipCode || ''
             };
-            
-            // DEBUG: Log what was actually extracted
-            console.log('Extracted customer info:', {
-                fullName: orderData.fullName,
-                email: orderData.email,
-                phone: orderData.phone,
-                address: orderData.address,
-                city: orderData.city,
-                postalCode: orderData.postalCode
-            });
             
             allOrders.push(orderData);
         });
@@ -1921,7 +1987,6 @@ async function loadOrders() {
                     <h4>Erreur de chargement des commandes</h4>
                     <p>${err.message}</p>
                     <button onclick="loadOrders()" class="secondary-btn">Réessayer</button>
-                    <button onclick="diagnoseOrders()" class="secondary-btn">Diagnostiquer</button>
                 </div>
             `;
         }
@@ -2124,36 +2189,6 @@ function displayOrders(orders) {
     list.innerHTML = html;
 }
 
-async function diagnoseOrders() {
-    try {
-        console.log('=== ORDERS DIAGNOSIS ===');
-        const snapshot = await db.collection('orders').limit(1).get();
-        
-        if (!snapshot.empty) {
-            const firstDoc = snapshot.docs[0];
-            const data = firstDoc.data();
-            
-            console.log('First order full data:', JSON.parse(JSON.stringify(data)));
-            console.log('Customer object type:', typeof data.customer);
-            console.log('Customer object:', data.customer);
-            
-            if (data.customer) {
-                console.log('Customer object keys:', Object.keys(data.customer));
-                console.log('Customer email field exists:', 'email' in data.customer);
-                console.log('All customer fields:');
-                for (const key in data.customer) {
-                    console.log(`  ${key}:`, data.customer[key]);
-                }
-            }
-        }
-        
-        console.log('=== END DIAGNOSIS ===');
-        
-    } catch(err) {
-        console.error('Diagnosis error:', err);
-    }
-}
-
 function filterOrders(status) {
     // Update active filter button
     document.querySelectorAll('.filter-options .filter-btn').forEach(btn => btn.classList.remove('active'));
@@ -2199,7 +2234,7 @@ async function deleteOrder(orderId) {
     }
 }
 
-// ========== GOOGLE SHEETS EXPORT (WITHOUT IMAGES) ==========
+// ========== GOOGLE SHEETS EXPORT ==========
 async function exportOrdersToGoogleSheets() {
     try {
         showNotification('Préparation de l\'export vers Google Sheets...', 'info');
@@ -2369,7 +2404,7 @@ async function copyToClipboard() {
                 phone,
                 whatsappLink,
                 parseFloat(order.totalAmount || 0).toFixed(2),
-                itemsText // NO IMAGES HERE
+                itemsText
             ].join('\t');
         });
         
@@ -2932,6 +2967,34 @@ Statut: ${getStatusText(order.status)}
 Date: ${formatDate(order.createdAt)}`);
 }
 
+function showUploadStatus(message, type) {
+    const uploadStatus = document.getElementById('uploadStatus');
+    if (!uploadStatus) return;
+    
+    uploadStatus.textContent = message;
+    uploadStatus.className = 'upload-status';
+    uploadStatus.classList.add(`upload-${type}`);
+    uploadStatus.style.display = 'block';
+    
+    // Auto-hide success messages after 3 seconds
+    if (type === 'success') {
+        setTimeout(() => {
+            uploadStatus.style.display = 'none';
+        }, 3000);
+    }
+}
+
+function getStatusColor(status) {
+    const colors = {
+        'pending': '#ff9800',
+        'confirmed': '#2196f3',
+        'shipped': '#9c27b0',
+        'delivered': '#4caf50',
+        'cancelled': '#f44336'
+    };
+    return colors[status] || '#9e9e9e';
+}
+
 // ========== AUTH FUNCTIONS ==========
 function showRegister() {
     const authForm = document.querySelector('.auth-form');
@@ -2990,8 +3053,6 @@ async function register() {
         
         showAuthMessage('Compte créé avec succès! Vous êtes maintenant connecté.', 'success');
         
-        // Don't call showAdminPanel here - auth state change will handle it
-        
     } catch(err) {
         let errorMessage = 'Erreur lors de la création du compte';
         switch(err.code) {
@@ -3024,7 +3085,6 @@ async function login() {
         showAuthMessage('Connexion en cours...', 'info');
         await auth.signInWithEmailAndPassword(email, password);
         showAuthMessage('Connexion réussie!', 'success');
-        // Don't call showAdminPanel here - auth state change will handle it
         
     } catch(err) {
         let errorMessage = 'Erreur de connexion';
@@ -3060,7 +3120,6 @@ function showAuthMessage(message, type) {
 function logout() {
     if (confirm('Êtes-vous sûr de vouloir vous déconnecter?')) {
         auth.signOut();
-        // Don't call showLoginPanel here - auth state change will handle it
     }
 }
 
@@ -3113,35 +3172,6 @@ function showLoginPanel() {
     if (passwordInput) passwordInput.value = '';
 }
 
-// ========== ADDITIONAL UTILITY FUNCTIONS ==========
-function showUploadStatus(message, type) {
-    const uploadStatus = document.getElementById('uploadStatus');
-    if (!uploadStatus) return;
-    
-    uploadStatus.textContent = message;
-    uploadStatus.className = 'upload-status';
-    uploadStatus.classList.add(`upload-${type}`);
-    uploadStatus.style.display = 'block';
-    
-    // Auto-hide success messages after 3 seconds
-    if (type === 'success') {
-        setTimeout(() => {
-            uploadStatus.style.display = 'none';
-        }, 3000);
-    }
-}
-
-function getStatusColor(status) {
-    const colors = {
-        'pending': '#ff9800',
-        'confirmed': '#2196f3',
-        'shipped': '#9c27b0',
-        'delivered': '#4caf50',
-        'cancelled': '#f44336'
-    };
-    return colors[status] || '#9e9e9e';
-}
-
 // ========== INITIALIZATION ==========
 // Check auth state
 auth.onAuthStateChanged((user) => {
@@ -3178,7 +3208,7 @@ window.addEventListener('error', function(e) {
     console.error('Global error:', e.error);
     addDebugInfo('Erreur globale: ' + e.message);
 });
-
 </script>
 </body>
 </html>
+

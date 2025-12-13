@@ -2276,6 +2276,7 @@ const modalContent = document.getElementById('modal-content');
 // ========== FILTER VARIABLES ==========
 let selectedCategories = [];
 let selectedStockStatuses = [];
+let isMultipleSelectionMode = false; // New variable to track selection mode
 
 // ========== DOMContentLoaded event ==========
 document.addEventListener('DOMContentLoaded', function() {
@@ -2303,6 +2304,21 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Add promotion filter to mobile menu
     addPromotionFilterToMenu();
+    
+    // Add keyboard listeners for Ctrl/Cmd click
+    document.addEventListener('keydown', function(e) {
+        // Enable multiple selection mode when Ctrl or Cmd is pressed
+        if (e.ctrlKey || e.metaKey) {
+            isMultipleSelectionMode = true;
+        }
+    });
+    
+    document.addEventListener('keyup', function(e) {
+        // Disable multiple selection mode when Ctrl or Cmd is released
+        if (!e.ctrlKey && !e.metaKey) {
+            isMultipleSelectionMode = false;
+        }
+    });
 });
 
 // Add promotion filter to mobile menu
@@ -2531,8 +2547,8 @@ function filterByPromotion() {
     }
 }
 
-// ========== FILTER BY CATEGORY FUNCTION (FIXED for multiple selection) ==========
-function filterByCategory(categoryKey) {
+// ========== FILTER BY CATEGORY FUNCTION (UPDATED with dual modes) ==========
+function filterByCategory(categoryKey, forceMultiple = false) {
     if (typeof categoryKey === 'string') {
         // Reset promotion filter when selecting other category
         currentPromotionFilter = false;
@@ -2542,15 +2558,23 @@ function filterByCategory(categoryKey) {
         const normalizedKey = categoryKey.toLowerCase();
         const finalKey = normalizedKey === 'niches' ? 'niche' : normalizedKey;
         
-        // Check if category is already selected, if so, remove it (toggle)
-        const existingIndex = selectedCategories.indexOf(finalKey);
+        // Check if we're in multiple selection mode (Ctrl/Cmd pressed) or forced multiple
+        const useMultipleMode = forceMultiple || isMultipleSelectionMode;
         
-        if (existingIndex !== -1) {
-            // Remove category if already selected
-            selectedCategories.splice(existingIndex, 1);
+        if (!useMultipleMode) {
+            // SINGLE SELECTION MODE: Replace all selected categories with the new one
+            selectedCategories = [finalKey];
         } else {
-            // Add category if not selected
-            selectedCategories.push(finalKey);
+            // MULTIPLE SELECTION MODE: Toggle the category
+            const existingIndex = selectedCategories.indexOf(finalKey);
+            
+            if (existingIndex !== -1) {
+                // Remove category if already selected
+                selectedCategories.splice(existingIndex, 1);
+            } else {
+                // Add category if not selected
+                selectedCategories.push(finalKey);
+            }
         }
         
         // Update UI based on selection
@@ -2628,7 +2652,7 @@ async function loadProductsFromFirebase() {
     }
 }
 
-// ========== APPLY FILTERS FUNCTION (FIXED for AND logic) ==========
+// ========== APPLY FILTERS FUNCTION (UPDATED with dual logic) ==========
 function applyFilters() {
     if (!productsContainer || !allProductsList || allProductsList.length === 0) {
         return;
@@ -2654,28 +2678,50 @@ function applyFilters() {
             // Get product stock statuses
             const productStockStatuses = getProductStockStatuses(product);
             
-            // Check if product matches ALL selected categories (AND logic)
+            // Check if product matches categories
             let categoryMatch = true;
             if (selectedCategories.length > 0) {
-                // Product must contain ALL selected categories
-                categoryMatch = selectedCategories.every(selectedCat => {
-                    // Convert selected category to normalized form
-                    const normalizedSelectedCat = selectedCat.toLowerCase();
-                    
-                    return allProductCategories.some(productCat => {
-                        if (productCat && typeof productCat === 'string') {
-                            const normalizedProductCat = productCat.toLowerCase();
-                            
-                            // Handle "niche" category - accept both "niche" and "niches" in database
-                            if (normalizedSelectedCat === 'niche') {
-                                return normalizedProductCat === 'niche' || normalizedProductCat === 'niches';
+                if (selectedCategories.length === 1) {
+                    // SINGLE CATEGORY: Use OR logic - show products in this category
+                    categoryMatch = selectedCategories.some(selectedCat => {
+                        // Convert selected category to normalized form
+                        const normalizedSelectedCat = selectedCat.toLowerCase();
+                        
+                        return allProductCategories.some(productCat => {
+                            if (productCat && typeof productCat === 'string') {
+                                const normalizedProductCat = productCat.toLowerCase();
+                                
+                                // Handle "niche" category - accept both "niche" and "niches" in database
+                                if (normalizedSelectedCat === 'niche') {
+                                    return normalizedProductCat === 'niche' || normalizedProductCat === 'niches';
+                                }
+                                
+                                return normalizedProductCat === normalizedSelectedCat;
                             }
-                            
-                            return normalizedProductCat === normalizedSelectedCat;
-                        }
-                        return false;
+                            return false;
+                        });
                     });
-                });
+                } else {
+                    // MULTIPLE CATEGORIES: Use AND logic - show products in ALL selected categories
+                    categoryMatch = selectedCategories.every(selectedCat => {
+                        // Convert selected category to normalized form
+                        const normalizedSelectedCat = selectedCat.toLowerCase();
+                        
+                        return allProductCategories.some(productCat => {
+                            if (productCat && typeof productCat === 'string') {
+                                const normalizedProductCat = productCat.toLowerCase();
+                                
+                                // Handle "niche" category - accept both "niche" and "niches" in database
+                                if (normalizedSelectedCat === 'niche') {
+                                    return normalizedProductCat === 'niche' || normalizedProductCat === 'niches';
+                                }
+                                
+                                return normalizedProductCat === normalizedSelectedCat;
+                            }
+                            return false;
+                        });
+                    });
+                }
             }
             
             // Check if product matches selected stock statuses (if any)
@@ -3556,6 +3602,7 @@ function showNotification(message, type = 'success') {
    </script>
 </body>
 </html>
+
 
 
 

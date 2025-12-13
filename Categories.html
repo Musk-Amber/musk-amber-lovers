@@ -2435,7 +2435,7 @@ function getCategoryDisplayName(categoryKey) {
         'femme': 'Parfums Femme',
         'homme': 'Parfums Homme',
         'arabes': 'Parfums Arabes',
-        'niche': 'Parfums de niche', // Use "niche" without 's'
+        'niche': 'Parfums de niche',
         'coffrets': 'Coffrets Cadeaux',
         'nouveautes': 'Nouveautés',
         'promotion': 'Promotions'
@@ -2454,7 +2454,7 @@ function getCategoryDescription(categoryKey) {
         'femme': 'Des fragrances délicates et envoûtantes pour la femme moderne',
         'homme': 'Des essences boisées et sophistiquées pour l\'homme élégant',
         'arabes': 'Des fragrances orientales riches en oud et en notes épicées',
-        'niche': 'Des créations exclusives et rares pour les connaisseurs', // Use "niche" without 's'
+        'niche': 'Des créations exclusives et rares pour les connaisseurs',
         'coffrets': 'Des ensembles cadeaux parfaits pour toutes les occasions',
         'nouveautes': 'Découvrez nos dernières arrivées et créations exclusives',
         'promotion': 'Profitez de nos offres spéciales et produits en promotion'
@@ -2531,6 +2531,70 @@ function filterByPromotion() {
     }
 }
 
+// ========== FILTER BY CATEGORY FUNCTION (FIXED for multiple selection) ==========
+function filterByCategory(categoryKey) {
+    if (typeof categoryKey === 'string') {
+        // Reset promotion filter when selecting other category
+        currentPromotionFilter = false;
+        selectedStockStatuses = [];
+        
+        // Convert "niches" to "niche" if needed
+        const normalizedKey = categoryKey.toLowerCase();
+        const finalKey = normalizedKey === 'niches' ? 'niche' : normalizedKey;
+        
+        // Check if category is already selected, if so, remove it (toggle)
+        const existingIndex = selectedCategories.indexOf(finalKey);
+        
+        if (existingIndex !== -1) {
+            // Remove category if already selected
+            selectedCategories.splice(existingIndex, 1);
+        } else {
+            // Add category if not selected
+            selectedCategories.push(finalKey);
+        }
+        
+        // Update UI based on selection
+        if (selectedCategories.length === 0) {
+            // No categories selected
+            if (categoryInfoContainer) categoryInfoContainer.style.display = 'none';
+            if (productsTitle) productsTitle.textContent = 'Tous nos Produits';
+        } else {
+            // Show category info with multiple categories
+            if (categoryInfoContainer) categoryInfoContainer.style.display = 'block';
+            
+            if (selectedCategories.length === 1) {
+                // Single category selected
+                const categoryName = selectedCategories[0];
+                if (currentCategoryTitle) currentCategoryTitle.textContent = getCategoryDisplayName(categoryName);
+                if (currentCategoryDescription) currentCategoryDescription.textContent = getCategoryDescription(categoryName);
+                if (productsTitle) productsTitle.textContent = `Produits - ${getCategoryDisplayName(categoryName)}`;
+            } else {
+                // Multiple categories selected
+                const categoryNames = selectedCategories.map(cat => getCategoryDisplayName(cat)).join(' & ');
+                if (currentCategoryTitle) currentCategoryTitle.textContent = `Filtres: ${categoryNames}`;
+                if (currentCategoryDescription) currentCategoryDescription.textContent = `Produits correspondant à: ${categoryNames}`;
+                if (productsTitle) productsTitle.textContent = `Produits - ${categoryNames}`;
+            }
+        }
+        
+        // Apply filters
+        applyFilters();
+        
+        // Clear search
+        if (searchInput) searchInput.value = '';
+        
+        // Close mobile menu if open
+        const mobileMenu = document.getElementById('mobile-menu');
+        const menuOverlay = document.getElementById('menu-overlay');
+        
+        if (mobileMenu && mobileMenu.classList.contains('active')) {
+            mobileMenu.classList.remove('active');
+            if (menuOverlay) menuOverlay.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+    }
+}
+
 // ========== LOAD PRODUCTS FROM FIREBASE ==========
 async function loadProductsFromFirebase() {
     try {
@@ -2564,53 +2628,7 @@ async function loadProductsFromFirebase() {
     }
 }
 
-// ========== Filter by category function ==========
-function filterByCategory(categoryKey) {
-    if (typeof categoryKey === 'string') {
-        // Reset promotion filter when selecting other category
-        currentPromotionFilter = false;
-        selectedStockStatuses = [];
-        
-        // Convert "niches" to "niche" if needed
-        const normalizedKey = categoryKey.toLowerCase();
-        const finalKey = normalizedKey === 'niches' ? 'niche' : normalizedKey;
-        
-        // Clear the array and add only the new category
-        selectedCategories = [finalKey];
-        
-        // Update UI based on selection
-        if (selectedCategories.length === 0) {
-            // No categories selected
-            if (categoryInfoContainer) categoryInfoContainer.style.display = 'none';
-            if (productsTitle) productsTitle.textContent = 'Tous nos Produits';
-        } else {
-            // Single category selected
-            const categoryName = selectedCategories[0];
-            if (categoryInfoContainer) categoryInfoContainer.style.display = 'block';
-            if (currentCategoryTitle) currentCategoryTitle.textContent = getCategoryDisplayName(categoryName);
-            if (currentCategoryDescription) currentCategoryDescription.textContent = getCategoryDescription(categoryName);
-            if (productsTitle) productsTitle.textContent = `Produits - ${getCategoryDisplayName(categoryName)}`;
-        }
-        
-        // Apply filters
-        applyFilters();
-        
-        // Clear search
-        if (searchInput) searchInput.value = '';
-        
-        // Close mobile menu if open
-        const mobileMenu = document.getElementById('mobile-menu');
-        const menuOverlay = document.getElementById('menu-overlay');
-        
-        if (mobileMenu && mobileMenu.classList.contains('active')) {
-            mobileMenu.classList.remove('active');
-            if (menuOverlay) menuOverlay.classList.remove('active');
-            document.body.style.overflow = '';
-        }
-    }
-}
-
-// ========== APPLY FILTERS FUNCTION ==========
+// ========== APPLY FILTERS FUNCTION (FIXED for AND logic) ==========
 function applyFilters() {
     if (!productsContainer || !allProductsList || allProductsList.length === 0) {
         return;
@@ -2636,10 +2654,11 @@ function applyFilters() {
             // Get product stock statuses
             const productStockStatuses = getProductStockStatuses(product);
             
-            // Check if product matches selected category (if any)
+            // Check if product matches ALL selected categories (AND logic)
             let categoryMatch = true;
             if (selectedCategories.length > 0) {
-                categoryMatch = selectedCategories.some(selectedCat => {
+                // Product must contain ALL selected categories
+                categoryMatch = selectedCategories.every(selectedCat => {
                     // Convert selected category to normalized form
                     const normalizedSelectedCat = selectedCat.toLowerCase();
                     
@@ -2652,7 +2671,7 @@ function applyFilters() {
                                 return normalizedProductCat === 'niche' || normalizedProductCat === 'niches';
                             }
                             
-                            return normalizedProductCat === 'niche';
+                            return normalizedProductCat === normalizedSelectedCat;
                         }
                         return false;
                     });
@@ -2840,7 +2859,7 @@ function getTypeDisplayName(type) {
         'homme': 'Homme',
         'femme': 'Femme',
         'arabes': 'Arabe',
-        'niche': 'Niche'    // Use "niche" without 's'
+        'niche': 'Niche'
     };
     
     const normalizedType = type.toLowerCase();
@@ -3534,8 +3553,9 @@ function showNotification(message, type = 'success') {
         setTimeout(() => notification.remove(), 300);
     }, 3000);
 }
-</script>
+   </script>
 </body>
 </html>
+
 
 

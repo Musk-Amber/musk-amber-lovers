@@ -1161,13 +1161,31 @@
                     </div>
 
                     <div class="section">
-                        <h2>Produits existants</h2>
-                        <div class="search-box">
-                            <input type="text" id="productSearch" placeholder="Rechercher un produit..." oninput="searchProducts()">
-                        </div>
-                        <div id="productsList"></div>
+                            <h2>Produits existants</h2>
+                            <div class="search-box">
+                                <input type="text" id="productSearch" placeholder="Rechercher un produit..." oninput="searchProducts()">
+                            </div>
+                            
+                            <!-- Add this table structure -->
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nom</th>
+                                        <th>Marque</th>
+                                        <th>Catégories</th>
+                                        <th>Type</th>
+                                        <th>Volume</th>
+                                        <th>Prix</th>
+                                        <th>Statut</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="productsTableBody">
+                                    <!-- Products will be loaded here -->
+                                </tbody>
+                            </table>
+                            <div id="productsList"></div>
                     </div>
-                </div>
                 
                 <!-- Orders Tab -->
                 <!-- Replace the entire Orders Tab content with this: -->
@@ -1260,6 +1278,7 @@
     </div>
 
  <script>
+
 const firebaseConfig = {
     apiKey: "AIzaSyDxHAlR86M1U_-sBdLtZ6nEh0ssUREQY5M",
     authDomain: "muskandamber-83cd8.firebaseapp.com",
@@ -1272,38 +1291,167 @@ const firebaseConfig = {
 
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
 const db = firebase.firestore();
 
-// DOM Elements
-const addProductBtn = document.getElementById('add-product-btn');
-const productForm = document.getElementById('product-form');
-const productsTable = document.getElementById('products-table');
-const productsTableBody = document.getElementById('products-table-body');
-const categoriesSelect = document.getElementById('categories');
-
-// Current product being edited
-let editingProductId = null;
-
-// Load existing products
-loadProducts();
-
-// Load categories from Firebase
-loadCategories();
-
-// Event Listeners
-if (addProductBtn) {
-    addProductBtn.addEventListener('click', addProduct);
+// ========== Authentication Functions ==========
+function showNotification(message, type = 'success') {
+    // Remove existing notification
+    const existingNotification = document.querySelector('.notification');
+    if (existingNotification) {
+        existingNotification.remove();
+    }
+    
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.innerHTML = `
+        <div class="notification-content">
+            <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+            <span>${message}</span>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
 }
 
-// ========== Load Products Function ==========
+async function login() {
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const authMessage = document.getElementById('authMessage');
+    
+    if (!email || !password) {
+        authMessage.textContent = "Veuillez remplir tous les champs";
+        authMessage.className = 'alert alert-error';
+        authMessage.classList.remove('hidden');
+        return;
+    }
+    
+    try {
+        const userCredential = await auth.signInWithEmailAndPassword(email, password);
+        const user = userCredential.user;
+        
+        authMessage.textContent = "Connexion réussie!";
+        authMessage.className = 'alert alert-success';
+        authMessage.classList.remove('hidden');
+        
+        // Hide auth section and show admin panel
+        document.getElementById('authSection').classList.add('hidden');
+        document.getElementById('adminPanel').classList.remove('hidden');
+        
+        // Set user email
+        document.getElementById('userEmail').textContent = user.email;
+        
+        // Load admin data
+        loadAdminData();
+        
+    } catch (error) {
+        console.error('Login error:', error);
+        authMessage.textContent = "Erreur de connexion: " + error.message;
+        authMessage.className = 'alert alert-error';
+        authMessage.classList.remove('hidden');
+    }
+}
+
+async function register() {
+    const email = document.getElementById('regEmail').value;
+    const password = document.getElementById('regPassword').value;
+    const confirmPassword = document.getElementById('regConfirmPassword').value;
+    const authMessage = document.getElementById('authMessage');
+    
+    if (!email || !password || !confirmPassword) {
+        authMessage.textContent = "Veuillez remplir tous les champs";
+        authMessage.className = 'alert alert-error';
+        authMessage.classList.remove('hidden');
+        return;
+    }
+    
+    if (password !== confirmPassword) {
+        authMessage.textContent = "Les mots de passe ne correspondent pas";
+        authMessage.className = 'alert alert-error';
+        authMessage.classList.remove('hidden');
+        return;
+    }
+    
+    try {
+        await auth.createUserWithEmailAndPassword(email, password);
+        authMessage.textContent = "Compte créé avec succès! Vous pouvez maintenant vous connecter.";
+        authMessage.className = 'alert alert-success';
+        authMessage.classList.remove('hidden');
+        
+        // Switch back to login form
+        showLogin();
+        
+    } catch (error) {
+        console.error('Registration error:', error);
+        authMessage.textContent = "Erreur d'inscription: " + error.message;
+        authMessage.className = 'alert alert-error';
+        authMessage.classList.remove('hidden');
+    }
+}
+
+function showRegister() {
+    document.getElementById('authSection').querySelector('.auth-form').classList.add('hidden');
+    document.getElementById('registerForm').classList.remove('hidden');
+}
+
+function showLogin() {
+    document.getElementById('registerForm').classList.add('hidden');
+    document.getElementById('authSection').querySelector('.auth-form').classList.remove('hidden');
+}
+
+function logout() {
+    auth.signOut().then(() => {
+        document.getElementById('adminPanel').classList.add('hidden');
+        document.getElementById('authSection').classList.remove('hidden');
+        document.getElementById('authMessage').textContent = "Déconnexion réussie";
+        document.getElementById('authMessage').className = 'alert alert-success';
+        document.getElementById('authMessage').classList.remove('hidden');
+    });
+}
+
+// ========== Tab Management ==========
+function openTab(tabName) {
+    // Hide all tab contents
+    const tabContents = document.querySelectorAll('.tab-content');
+    tabContents.forEach(tab => tab.classList.remove('active'));
+    
+    // Remove active class from all tab buttons
+    const tabButtons = document.querySelectorAll('.tab-button');
+    tabButtons.forEach(button => button.classList.remove('active'));
+    
+    // Show the selected tab content
+    document.getElementById(tabName).classList.add('active');
+    
+    // Add active class to clicked button
+    event.currentTarget.classList.add('active');
+    
+    // Load data for the tab
+    if (tabName === 'products') {
+        loadProducts();
+    } else if (tabName === 'orders') {
+        loadOrders();
+    } else if (tabName === 'contactMessages') {
+        loadContactMessages();
+    }
+}
+
+// ========== Product Management ==========
 async function loadProducts() {
     try {
-        const snapshot = await db.collection('products').orderBy('createdAt', 'desc').get();
+        const productsTableBody = document.getElementById('productsTableBody');
         if (!productsTableBody) {
-            console.error('productsTableBody not found');
+            console.error('productsTableBody element not found');
             return;
         }
         
+        const snapshot = await db.collection('products').orderBy('createdAt', 'desc').get();
         productsTableBody.innerHTML = '';
         
         snapshot.forEach(doc => {
@@ -1316,8 +1464,10 @@ async function loadProducts() {
     }
 }
 
-// ========== Display Product Function ==========
 function displayProduct(id, product) {
+    const productsTableBody = document.getElementById('productsTableBody');
+    if (!productsTableBody) return;
+    
     const row = document.createElement('tr');
     
     // Format categories display (convert "niches" to "niche" if needed)
@@ -1325,7 +1475,12 @@ function displayProduct(id, product) {
     if (typeof categoriesDisplay === 'string') {
         categoriesDisplay = categoriesDisplay.replace(/niches/gi, 'niche');
     } else if (Array.isArray(categoriesDisplay)) {
-        categoriesDisplay = categoriesDisplay.map(cat => cat.replace(/niches/gi, 'niche')).join(', ');
+        categoriesDisplay = categoriesDisplay.map(cat => {
+            if (typeof cat === 'string') {
+                return cat.replace(/niches/gi, 'niche');
+            }
+            return cat;
+        }).join(', ');
     }
     
     // Format type display (convert "niches" to "niche" if needed)
@@ -1343,8 +1498,8 @@ function displayProduct(id, product) {
     }
     
     row.innerHTML = `
-        <td>${product.name || ''}</td>
-        <td>${product.brand || ''}</td>
+        <td>${product.name || product.productName || ''}</td>
+        <td>${product.brand || product.productBrand || ''}</td>
         <td>${categoriesDisplay}</td>
         <td>${typeDisplay}</td>
         <td>${product.volume || ''}</td>
@@ -1352,112 +1507,113 @@ function displayProduct(id, product) {
         <td>${stockStatusesDisplay}</td>
         <td>
             <button onclick="editProduct('${id}')" class="edit-btn">
-                <i class="fas fa-edit"></i>
+                <i class="fas fa-edit"></i> Modifier
             </button>
             <button onclick="deleteProduct('${id}')" class="delete-btn">
-                <i class="fas fa-trash"></i>
+                <i class="fas fa-trash"></i> Supprimer
             </button>
         </td>
     `;
     
-    if (productsTableBody) {
-        productsTableBody.appendChild(row);
-    }
+    productsTableBody.appendChild(row);
 }
 
-// ========== Add Product Function ==========
 async function addProduct() {
     try {
-        // Get form values
-        const name = document.getElementById('product-name')?.value;
-        const brand = document.getElementById('brand')?.value;
-        const description = document.getElementById('description')?.value;
-        const price = parseFloat(document.getElementById('price')?.value) || 0;
-        const volume = document.getElementById('volume')?.value;
-        const stockStatus = document.getElementById('stock-status')?.value;
-        const type = document.getElementById('type')?.value;
+        // Get form values using the correct IDs from your HTML
+        const productName = document.getElementById('productName')?.value;
+        const productBrand = document.getElementById('productBrand')?.value;
+        const productPrice = parseFloat(document.getElementById('productPrice')?.value) || 0;
+        const productDescription = document.getElementById('productDescription')?.value;
         
-        if (!name || !price) {
+        if (!productName || !productPrice) {
             showNotification('Le nom et le prix sont obligatoires', 'error');
             return;
         }
         
-        // Get categories (multiple selection)
+        // Get categories from checkboxes
         const selectedCategories = [];
-        if (categoriesSelect) {
-            for (let option of categoriesSelect.options) {
-                if (option.selected) {
-                    // Convert "niches" to "niche" before storing
-                    let categoryValue = option.value;
-                    if (categoryValue.toLowerCase() === 'niches') {
-                        categoryValue = 'niche';
-                    }
-                    selectedCategories.push(categoryValue);
-                }
+        const categoryCheckboxes = document.querySelectorAll('input[type="checkbox"][id^="cat-"]:checked');
+        categoryCheckboxes.forEach(checkbox => {
+            let category = checkbox.value;
+            // Convert "niches" to "niche"
+            if (category.toLowerCase() === 'niches') {
+                category = 'niche';
+            }
+            selectedCategories.push(category);
+        });
+        
+        // Get volume from radio buttons
+        const volumeRadio = document.querySelector('input[name="volume"]:checked');
+        const volume = volumeRadio ? volumeRadio.value : '';
+        
+        // Get stock statuses from checkboxes
+        const selectedStockStatuses = [];
+        const stockCheckboxes = document.querySelectorAll('input[name="stockStatus"]:checked');
+        stockCheckboxes.forEach(checkbox => {
+            selectedStockStatuses.push(checkbox.value);
+        });
+        
+        // Get image URLs
+        const imageUrlsInput = document.getElementById('productImageUrls');
+        let imageUrls = [];
+        if (imageUrlsInput && imageUrlsInput.value) {
+            try {
+                imageUrls = JSON.parse(imageUrlsInput.value);
+            } catch (e) {
+                console.error('Error parsing image URLs:', e);
             }
         }
         
-        // Convert "type" from "niches" to "niche" if needed
-        let normalizedType = type;
-        if (normalizedType && normalizedType.toLowerCase() === 'niches') {
-            normalizedType = 'niche';
-        }
-        
-        // Handle image uploads
-        const imageUrlsInput = document.getElementById('image-urls');
-        let imageUrls = [];
-        if (imageUrlsInput && imageUrlsInput.value) {
-            imageUrls = imageUrlsInput.value.split(',').map(url => url.trim()).filter(url => url !== '');
-        }
-        
-        // Create product object
+        // Create product object with "niche" instead of "niches"
         const product = {
-            name,
-            brand: brand || '',
-            description: description || '',
-            price,
-            volume: volume || '',
-            stockStatuses: stockStatus ? [stockStatus] : ['en stock'],
-            type: normalizedType || '',
+            name: productName,
+            brand: productBrand || '',
+            price: productPrice,
+            description: productDescription || '',
             categories: selectedCategories,
+            volume: volume,
+            stockStatuses: selectedStockStatuses.length > 0 ? selectedStockStatuses : ['en stock'],
+            imageUrls: imageUrls,
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         };
         
-        // Add image URLs if available
-        if (imageUrls.length > 0) {
-            product.imageUrls = imageUrls;
-        }
-        
         // Add to Firestore
         await db.collection('products').add(product);
         
-        // Show success message
         showNotification('Produit ajouté avec succès!', 'success');
         
         // Clear form
-        if (productForm) {
-            productForm.reset();
-        }
+        document.getElementById('productName').value = '';
+        document.getElementById('productBrand').value = '';
+        document.getElementById('productPrice').value = '';
+        document.getElementById('productDescription').value = '';
         
-        // Reset edit mode
-        resetEditMode();
+        // Uncheck all checkboxes
+        document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+        
+        // Uncheck all radio buttons
+        document.querySelectorAll('input[type="radio"]').forEach(rb => rb.checked = false);
+        
+        // Clear image previews
+        const imagesPreview = document.getElementById('imagesPreview');
+        if (imagesPreview) imagesPreview.innerHTML = '';
+        
+        // Clear hidden image URLs field
+        if (imageUrlsInput) imageUrlsInput.value = '';
         
         // Reload products
         loadProducts();
         
     } catch (error) {
         console.error('Error adding product:', error);
-        showNotification('Erreur lors de l\'ajout du produit', 'error');
+        showNotification('Erreur lors de l\'ajout du produit: ' + error.message, 'error');
     }
 }
 
-// ========== Edit Product Function (FIXED) ==========
 async function editProduct(productId) {
     try {
-        console.log('Editing product ID:', productId);
-        
-        // Get product data
         const doc = await db.collection('products').doc(productId).get();
         if (!doc.exists) {
             showNotification('Produit non trouvé', 'error');
@@ -1465,99 +1621,83 @@ async function editProduct(productId) {
         }
         
         const product = doc.data();
-        editingProductId = productId;
         
         // Populate form with product data
-        const productNameInput = document.getElementById('product-name');
-        const brandInput = document.getElementById('brand');
-        const descriptionInput = document.getElementById('description');
-        const priceInput = document.getElementById('price');
-        const volumeInput = document.getElementById('volume');
-        const stockStatusSelect = document.getElementById('stock-status');
-        const typeSelect = document.getElementById('type');
-        const imageUrlsInput = document.getElementById('image-urls');
+        document.getElementById('productName').value = product.name || '';
+        document.getElementById('productBrand').value = product.brand || '';
+        document.getElementById('productPrice').value = product.price || '';
+        document.getElementById('productDescription').value = product.description || '';
         
-        if (productNameInput) productNameInput.value = product.name || '';
-        if (brandInput) brandInput.value = product.brand || '';
-        if (descriptionInput) descriptionInput.value = product.description || '';
-        if (priceInput) priceInput.value = product.price || '';
-        if (volumeInput) volumeInput.value = product.volume || '';
-        
-        // Set stock status
-        if (stockStatusSelect) {
-            if (product.stockStatuses && product.stockStatuses.length > 0) {
-                stockStatusSelect.value = product.stockStatuses[0];
-            } else if (product.stockStatus) {
-                stockStatusSelect.value = product.stockStatus;
+        // Set categories checkboxes
+        document.querySelectorAll('input[type="checkbox"][id^="cat-"]').forEach(checkbox => {
+            let checkboxValue = checkbox.value;
+            // Convert "niches" to "niche" for comparison
+            if (checkboxValue === 'niches') checkboxValue = 'niche';
+            
+            if (product.categories && Array.isArray(product.categories)) {
+                const normalizedCategories = product.categories.map(cat => 
+                    cat.toLowerCase() === 'niches' ? 'niche' : cat
+                );
+                checkbox.checked = normalizedCategories.includes(checkboxValue);
             } else {
-                stockStatusSelect.value = 'en stock';
+                checkbox.checked = false;
             }
+        });
+        
+        // Set volume radio button
+        if (product.volume) {
+            const volumeRadio = document.querySelector(`input[name="volume"][value="${product.volume}"]`);
+            if (volumeRadio) volumeRadio.checked = true;
         }
         
-        // Set type (ensure "niche" without 's')
-        if (typeSelect) {
-            let productType = product.type || '';
-            if (productType.toLowerCase() === 'niches') {
-                productType = 'niche';
-            }
-            typeSelect.value = productType;
-        }
-        
-        // Set categories (multiple selection)
-        if (categoriesSelect) {
-            const productCategories = product.categories || [];
-            
-            // Normalize categories to ensure "niche" without 's'
-            const normalizedCategories = productCategories.map(cat => {
-                if (typeof cat === 'string' && cat.toLowerCase() === 'niches') {
-                    return 'niche';
-                }
-                return cat;
-            });
-            
-            // Clear all selections first
-            for (let option of categoriesSelect.options) {
-                option.selected = false;
-            }
-            
-            // Select the product's categories
-            for (let option of categoriesSelect.options) {
-                // Normalize option value
-                let optionValue = option.value;
-                if (optionValue.toLowerCase() === 'niches') {
-                    optionValue = 'niche';
-                }
-                
-                if (normalizedCategories.includes(optionValue)) {
-                    option.selected = true;
-                }
-            }
-        }
-        
-        // Set image URLs
-        if (imageUrlsInput) {
-            if (product.imageUrls && product.imageUrls.length > 0) {
-                imageUrlsInput.value = product.imageUrls.join(', ');
+        // Set stock status checkboxes
+        document.querySelectorAll('input[name="stockStatus"]').forEach(checkbox => {
+            if (product.stockStatuses && Array.isArray(product.stockStatuses)) {
+                checkbox.checked = product.stockStatuses.includes(checkbox.value);
+            } else if (product.stockStatus === checkbox.value) {
+                checkbox.checked = true;
             } else {
-                imageUrlsInput.value = '';
+                checkbox.checked = false;
+            }
+        });
+        
+        // Set image previews
+        if (product.imageUrls && Array.isArray(product.imageUrls)) {
+            const imagesPreview = document.getElementById('imagesPreview');
+            if (imagesPreview) {
+                imagesPreview.innerHTML = '';
+                product.imageUrls.forEach(url => {
+                    if (url) {
+                        const imgDiv = document.createElement('div');
+                        imgDiv.className = 'image-preview-item';
+                        imgDiv.innerHTML = `
+                            <img src="${url}" alt="Product image">
+                            <button class="remove-image-btn" onclick="removeImagePreview(this)">×</button>
+                        `;
+                        imagesPreview.appendChild(imgDiv);
+                    }
+                });
+            }
+            
+            // Set hidden field with image URLs
+            const imageUrlsInput = document.getElementById('productImageUrls');
+            if (imageUrlsInput) {
+                imageUrlsInput.value = JSON.stringify(product.imageUrls);
             }
         }
         
-        // Change button to "Update Product"
-        if (addProductBtn) {
-            addProductBtn.textContent = 'Mettre à jour le produit';
-            addProductBtn.onclick = function() {
-                updateProduct(productId);
-            };
+        // Change button to update mode
+        const addBtn = document.querySelector('#products button[onclick="addProduct()"]');
+        if (addBtn) {
+            addBtn.textContent = 'Mettre à jour le produit';
+            addBtn.onclick = function() { updateProduct(productId); };
+            addBtn.id = 'updateProductBtn';
         }
         
-        // Scroll to form smoothly
-        const productFormElement = document.getElementById('product-form');
-        if (productFormElement) {
-            productFormElement.scrollIntoView({ 
-                behavior: 'smooth', 
-                block: 'start' 
-            });
+        // Show cancel button
+        const cancelBtn = document.getElementById('cancelEditBtn');
+        if (cancelBtn) {
+            cancelBtn.classList.remove('hidden');
         }
         
         showNotification('Produit chargé pour modification', 'success');
@@ -1568,90 +1708,71 @@ async function editProduct(productId) {
     }
 }
 
-// ========== Update Product Function ==========
 async function updateProduct(productId) {
     try {
-        // Get form values
-        const name = document.getElementById('product-name')?.value;
-        const brand = document.getElementById('brand')?.value;
-        const description = document.getElementById('description')?.value;
-        const price = parseFloat(document.getElementById('price')?.value) || 0;
-        const volume = document.getElementById('volume')?.value;
-        const stockStatus = document.getElementById('stock-status')?.value;
-        const type = document.getElementById('type')?.value;
+        // Get updated values (same as addProduct but for update)
+        const productName = document.getElementById('productName')?.value;
+        const productBrand = document.getElementById('productBrand')?.value;
+        const productPrice = parseFloat(document.getElementById('productPrice')?.value) || 0;
+        const productDescription = document.getElementById('productDescription')?.value;
         
-        if (!name || !price) {
+        if (!productName || !productPrice) {
             showNotification('Le nom et le prix sont obligatoires', 'error');
             return;
         }
         
-        // Get categories (multiple selection)
+        // Get categories
         const selectedCategories = [];
-        if (categoriesSelect) {
-            for (let option of categoriesSelect.options) {
-                if (option.selected) {
-                    // Convert "niches" to "niche" before storing
-                    let categoryValue = option.value;
-                    if (categoryValue.toLowerCase() === 'niches') {
-                        categoryValue = 'niche';
-                    }
-                    selectedCategories.push(categoryValue);
-                }
+        const categoryCheckboxes = document.querySelectorAll('input[type="checkbox"][id^="cat-"]:checked');
+        categoryCheckboxes.forEach(checkbox => {
+            let category = checkbox.value;
+            if (category.toLowerCase() === 'niches') {
+                category = 'niche';
+            }
+            selectedCategories.push(category);
+        });
+        
+        // Get volume
+        const volumeRadio = document.querySelector('input[name="volume"]:checked');
+        const volume = volumeRadio ? volumeRadio.value : '';
+        
+        // Get stock statuses
+        const selectedStockStatuses = [];
+        const stockCheckboxes = document.querySelectorAll('input[name="stockStatus"]:checked');
+        stockCheckboxes.forEach(checkbox => {
+            selectedStockStatuses.push(checkbox.value);
+        });
+        
+        // Get image URLs
+        const imageUrlsInput = document.getElementById('productImageUrls');
+        let imageUrls = [];
+        if (imageUrlsInput && imageUrlsInput.value) {
+            try {
+                imageUrls = JSON.parse(imageUrlsInput.value);
+            } catch (e) {
+                console.error('Error parsing image URLs:', e);
             }
         }
         
-        // Convert "type" from "niches" to "niche" if needed
-        let normalizedType = type;
-        if (normalizedType && normalizedType.toLowerCase() === 'niches') {
-            normalizedType = 'niche';
-        }
-        
-        // Handle image uploads
-        const imageUrlsInput = document.getElementById('image-urls');
-        let imageUrls = [];
-        if (imageUrlsInput && imageUrlsInput.value) {
-            imageUrls = imageUrlsInput.value.split(',').map(url => url.trim()).filter(url => url !== '');
-        }
-        
-        // Create update object
+        // Update product
         const updateData = {
-            name,
-            brand: brand || '',
-            description: description || '',
-            price,
-            volume: volume || '',
-            stockStatuses: stockStatus ? [stockStatus] : ['en stock'],
-            type: normalizedType || '',
+            name: productName,
+            brand: productBrand || '',
+            price: productPrice,
+            description: productDescription || '',
             categories: selectedCategories,
+            volume: volume,
+            stockStatuses: selectedStockStatuses.length > 0 ? selectedStockStatuses : ['en stock'],
+            imageUrls: imageUrls,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         };
         
-        // Add image URLs if available
-        if (imageUrls.length > 0) {
-            updateData.imageUrls = imageUrls;
-        } else {
-            // Keep existing images if no new ones provided
-            const doc = await db.collection('products').doc(productId).get();
-            if (doc.exists) {
-                const existingProduct = doc.data();
-                if (existingProduct.imageUrls && existingProduct.imageUrls.length > 0) {
-                    updateData.imageUrls = existingProduct.imageUrls;
-                }
-            }
-        }
-        
-        // Update in Firestore
         await db.collection('products').doc(productId).update(updateData);
         
-        // Show success message
         showNotification('Produit mis à jour avec succès!', 'success');
         
-        // Reset form and button
-        if (productForm) {
-            productForm.reset();
-        }
-        
-        resetEditMode();
+        // Reset form
+        cancelEdit();
         
         // Reload products
         loadProducts();
@@ -1662,17 +1783,42 @@ async function updateProduct(productId) {
     }
 }
 
-// ========== Reset Edit Mode Function ==========
-function resetEditMode() {
-    editingProductId = null;
+function cancelEdit() {
+    // Clear form
+    document.getElementById('productName').value = '';
+    document.getElementById('productBrand').value = '';
+    document.getElementById('productPrice').value = '';
+    document.getElementById('productDescription').value = '';
     
-    if (addProductBtn) {
-        addProductBtn.textContent = 'Ajouter le produit';
-        addProductBtn.onclick = addProduct;
+    // Uncheck all checkboxes
+    document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+    
+    // Uncheck all radio buttons
+    document.querySelectorAll('input[type="radio"]').forEach(rb => rb.checked = false);
+    
+    // Clear image previews
+    const imagesPreview = document.getElementById('imagesPreview');
+    if (imagesPreview) imagesPreview.innerHTML = '';
+    
+    // Clear hidden image URLs field
+    const imageUrlsInput = document.getElementById('productImageUrls');
+    if (imageUrlsInput) imageUrlsInput.value = '';
+    
+    // Reset button to add mode
+    const updateBtn = document.getElementById('updateProductBtn');
+    if (updateBtn) {
+        updateBtn.textContent = 'Ajouter Produit';
+        updateBtn.onclick = addProduct;
+        updateBtn.id = '';
+    }
+    
+    // Hide cancel button
+    const cancelBtn = document.getElementById('cancelEditBtn');
+    if (cancelBtn) {
+        cancelBtn.classList.add('hidden');
     }
 }
 
-// ========== Delete Product Function ==========
 async function deleteProduct(productId) {
     if (confirm('Êtes-vous sûr de vouloir supprimer ce produit?')) {
         try {
@@ -1686,313 +1832,167 @@ async function deleteProduct(productId) {
     }
 }
 
-// ========== Load Categories Function ==========
-async function loadCategories() {
-    try {
-        if (!categoriesSelect) {
-            console.error('categoriesSelect not found');
-            return;
-        }
+// ========== Image Handling ==========
+function handleMultipleImagesSelect(event) {
+    const files = event.target.files;
+    const imagesPreview = document.getElementById('imagesPreview');
+    const imageUrlsInput = document.getElementById('productImageUrls');
+    
+    if (!imagesPreview || !imageUrlsInput) return;
+    
+    // Clear existing previews
+    imagesPreview.innerHTML = '';
+    
+    const imageUrls = [];
+    
+    // Process each file
+    for (let i = 0; i < Math.min(files.length, 5); i++) {
+        const file = files[i];
+        const reader = new FileReader();
         
-        // Define categories (ensure "niche" without 's')
-        const categories = [
-            'homme',
-            'femme',
-            'arabes',
-            'niche', // Use "niche" not "niches"
-            'coffrets',
-            'nouveautes',
-            'promotion'
-        ];
-        
-        // Clear existing options
-        categoriesSelect.innerHTML = '';
-        
-        // Add categories as options
-        categories.forEach(category => {
-            const option = document.createElement('option');
-            option.value = category;
-            option.textContent = getCategoryDisplayName(category);
-            categoriesSelect.appendChild(option);
-        });
-        
-        // Make it a multiple select
-        categoriesSelect.multiple = true;
-        
-    } catch (error) {
-        console.error('Error loading categories:', error);
-    }
-}
-
-// ========== Helper Functions ==========
-function getCategoryDisplayName(categoryKey) {
-    const categoryMap = {
-        'homme': 'Parfums Homme',
-        'femme': 'Parfums Femme',
-        'arabes': 'Parfums Arabes',
-        'niche': 'Parfums de niche',
-        'coffrets': 'Coffrets Cadeaux',
-        'nouveautes': 'Nouveautés',
-        'promotion': 'Promotions'
-    };
-    
-    // Normalize the key - convert "niches" to "niche"
-    const normalizedKey = categoryKey.toLowerCase();
-    const finalKey = normalizedKey === 'niches' ? 'niche' : normalizedKey;
-    
-    return categoryMap[finalKey] || finalKey.charAt(0).toUpperCase() + finalKey.slice(1);
-}
-
-function showNotification(message, type = 'success') {
-    // Remove existing notification
-    const existingNotification = document.querySelector('.notification');
-    if (existingNotification) {
-        existingNotification.remove();
-    }
-    
-    // Create notification element
-    const notification = document.createElement('div');
-    notification.className = `notification ${type}`;
-    notification.innerHTML = `
-        <div class="notification-content">
-            <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
-            <span>${message}</span>
-        </div>
-    `;
-    
-    document.body.appendChild(notification);
-    
-    // Remove after 3 seconds
-    setTimeout(() => {
-        notification.style.animation = 'slideOut 0.3s ease';
-        setTimeout(() => notification.remove(), 300);
-    }, 3000);
-}
-
-// ========== Cancel Edit Function ==========
-function cancelEdit() {
-    if (productForm) {
-        productForm.reset();
-    }
-    resetEditMode();
-    showNotification('Modification annulée', 'info');
-}
-
-// ========== Add Cancel Button to Form (Optional) ==========
-// You can add this button to your HTML form:
-// <button type="button" onclick="cancelEdit()" class="cancel-btn" id="cancel-edit-btn" style="display: none;">
-//     Annuler
-// </button>
-
-// Then update the editProduct function to show the cancel button:
-function showCancelButton(show = true) {
-    const cancelBtn = document.getElementById('cancel-edit-btn');
-    if (cancelBtn) {
-        cancelBtn.style.display = show ? 'inline-block' : 'none';
-    }
-}
-
-// Update editProduct function to show cancel button
-async function editProductWithCancel(productId) {
-    await editProduct(productId);
-    showCancelButton(true);
-}
-
-// Update resetEditMode to hide cancel button
-function resetEditMode() {
-    editingProductId = null;
-    
-    if (addProductBtn) {
-        addProductBtn.textContent = 'Ajouter le produit';
-        addProductBtn.onclick = addProduct;
-    }
-    
-    showCancelButton(false);
-}
-
-// ========== Migration Function to Fix Existing Products ==========
-async function migrateExistingProducts() {
-    if (confirm('Voulez-vous mettre à jour tous les produits existants pour corriger "niches" en "niche"? Cette opération peut prendre quelques secondes.')) {
-        try {
-            const snapshot = await db.collection('products').get();
-            let updatedCount = 0;
+        reader.onload = function(e) {
+            // Create preview
+            const imgDiv = document.createElement('div');
+            imgDiv.className = 'image-preview-item';
+            imgDiv.innerHTML = `
+                <img src="${e.target.result}" alt="Product image">
+                <button class="remove-image-btn" onclick="removeImagePreview(this)">×</button>
+            `;
+            imagesPreview.appendChild(imgDiv);
             
-            // Process each product
-            for (const doc of snapshot.docs) {
-                const product = doc.data();
-                let needsUpdate = false;
-                const updateData = {};
-                
-                // Check and fix type field
-                if (product.type && typeof product.type === 'string' && product.type.toLowerCase() === 'niches') {
-                    updateData.type = 'niche';
-                    needsUpdate = true;
-                }
-                
-                // Check and fix categories array
-                if (product.categories && Array.isArray(product.categories)) {
-                    const fixedCategories = product.categories.map(cat => {
-                        if (typeof cat === 'string' && cat.toLowerCase() === 'niches') {
-                            return 'niche';
-                        }
-                        return cat;
-                    });
-                    
-                    // Check if any category was changed
-                    if (JSON.stringify(fixedCategories) !== JSON.stringify(product.categories)) {
-                        updateData.categories = fixedCategories;
-                        needsUpdate = true;
-                    }
-                }
-                
-                // Check and fix category field (if it's a string)
-                if (product.category && typeof product.category === 'string') {
-                    if (product.category.toLowerCase() === 'niches') {
-                        updateData.category = 'niche';
-                        needsUpdate = true;
-                    }
-                }
-                
-                // Update product if needed
-                if (needsUpdate) {
-                    updateData.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
-                    await db.collection('products').doc(doc.id).update(updateData);
-                    updatedCount++;
-                }
+            // Add to URLs array
+            imageUrls.push(e.target.result);
+            
+            // Update hidden field
+            imageUrlsInput.value = JSON.stringify(imageUrls);
+        };
+        
+        reader.readAsDataURL(file);
+    }
+    
+    // Reset file input
+    event.target.value = '';
+}
+
+function removeImagePreview(button) {
+    const imgDiv = button.parentElement;
+    const imagesPreview = document.getElementById('imagesPreview');
+    const imageUrlsInput = document.getElementById('productImageUrls');
+    
+    if (imgDiv && imagesPreview && imageUrlsInput) {
+        imagesPreview.removeChild(imgDiv);
+        
+        // Get remaining images
+        const remainingUrls = [];
+        const images = imagesPreview.querySelectorAll('img');
+        images.forEach(img => {
+            if (img.src) {
+                remainingUrls.push(img.src);
             }
-            
-            showNotification(`Migration terminée! ${updatedCount} produits mis à jour.`, 'success');
-            
-            // Reload products
-            loadProducts();
-            
-        } catch (error) {
-            console.error('Error migrating products:', error);
-            showNotification('Erreur lors de la migration des produits', 'error');
-        }
-    }
-}
-
-// ========== Export Products Function (Optional) ==========
-async function exportProducts() {
-    try {
-        const snapshot = await db.collection('products').get();
-        const products = [];
-        
-        snapshot.forEach(doc => {
-            products.push({
-                id: doc.id,
-                ...doc.data()
-            });
         });
         
-        // Convert to JSON
-        const json = JSON.stringify(products, null, 2);
+        // Update hidden field
+        imageUrlsInput.value = JSON.stringify(remainingUrls);
+    }
+}
+
+// ========== Dashboard Functions ==========
+async function loadAdminData() {
+    try {
+        // Load products count
+        const productsSnapshot = await db.collection('products').get();
+        document.getElementById('productsCount').textContent = productsSnapshot.size;
         
-        // Create download link
-        const blob = new Blob([json], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'products_backup_' + new Date().toISOString().split('T')[0] + '.json';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        // Load orders count
+        const ordersSnapshot = await db.collection('orders').get();
+        document.getElementById('ordersCount').textContent = ordersSnapshot.size;
         
-        showNotification('Produits exportés avec succès!', 'success');
+        // Calculate revenue
+        let revenue = 0;
+        ordersSnapshot.forEach(doc => {
+            const order = doc.data();
+            if (order.total) {
+                revenue += parseFloat(order.total);
+            }
+        });
+        document.getElementById('revenueCount').textContent = revenue.toFixed(2);
+        
+        // Load messages count
+        const messagesSnapshot = await db.collection('contactMessages').get();
+        document.getElementById('messagesCount').textContent = messagesSnapshot.size;
+        
     } catch (error) {
-        console.error('Error exporting products:', error);
-        showNotification('Erreur lors de l\'export des produits', 'error');
+        console.error('Error loading admin data:', error);
     }
 }
 
-// ========== Import Products Function (Optional) ==========
-async function importProducts(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    
-    if (confirm('Voulez-vous importer des produits? Cela écrasera les produits existants.')) {
-        try {
-            const reader = new FileReader();
-            reader.onload = async function(e) {
-                try {
-                    const products = JSON.parse(e.target.result);
-                    let importedCount = 0;
-                    
-                    // Clear existing products
-                    const snapshot = await db.collection('products').get();
-                    const batch = db.batch();
-                    snapshot.docs.forEach(doc => {
-                        batch.delete(doc.ref);
-                    });
-                    await batch.commit();
-                    
-                    // Import new products
-                    for (const product of products) {
-                        // Remove ID from product data
-                        const { id, ...productData } = product;
-                        
-                        // Ensure "niche" is stored correctly
-                        if (productData.type && productData.type.toLowerCase() === 'niches') {
-                            productData.type = 'niche';
-                        }
-                        
-                        if (productData.categories && Array.isArray(productData.categories)) {
-                            productData.categories = productData.categories.map(cat => {
-                                if (typeof cat === 'string' && cat.toLowerCase() === 'niches') {
-                                    return 'niche';
-                                }
-                                return cat;
-                            });
-                        }
-                        
-                        // Add timestamps
-                        productData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-                        productData.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
-                        
-                        await db.collection('products').add(productData);
-                        importedCount++;
-                    }
-                    
-                    showNotification(`${importedCount} produits importés avec succès!`, 'success');
-                    loadProducts();
-                    
-                } catch (error) {
-                    console.error('Error parsing import file:', error);
-                    showNotification('Erreur lors de l\'import des produits', 'error');
-                }
-            };
-            reader.readAsText(file);
-        } catch (error) {
-            console.error('Error importing products:', error);
-            showNotification('Erreur lors de l\'import des produits', 'error');
-        }
-    }
+// ========== Other Required Functions (Placeholders) ==========
+function searchProducts() {
+    // Implement product search
+    console.log('Search products function called');
 }
 
-// ========== Initialize on DOM Load ==========
+async function loadOrders() {
+    // Implement orders loading
+    console.log('Load orders function called');
+}
+
+function filterOrders(filter) {
+    // Implement order filtering
+    console.log('Filter orders:', filter);
+}
+
+async function loadContactMessages() {
+    // Implement contact messages loading
+    console.log('Load contact messages function called');
+}
+
+function filterMessages(filter) {
+    // Implement message filtering
+    console.log('Filter messages:', filter);
+}
+
+function debugMessages() {
+    // Implement debug messages
+    console.log('Debug messages function called');
+}
+
+function exportOrdersToGoogleSheets() {
+    // Implement export to Google Sheets
+    console.log('Export to Google Sheets function called');
+}
+
+function changePassword() {
+    // Implement password change
+    console.log('Change password function called');
+}
+
+// ========== Initialize Authentication State ==========
+auth.onAuthStateChanged((user) => {
+    if (user) {
+        // User is signed in
+        document.getElementById('authSection').classList.add('hidden');
+        document.getElementById('adminPanel').classList.remove('hidden');
+        document.getElementById('userEmail').textContent = user.email;
+        loadAdminData();
+    } else {
+        // User is signed out
+        document.getElementById('authSection').classList.remove('hidden');
+        document.getElementById('adminPanel').classList.add('hidden');
+    }
+});
+
+// Initialize on DOM load
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Admin panel initialized');
     
-    // Check if elements exist
-    if (!productForm) {
-        console.warn('Product form not found');
-    }
-    
-    if (!productsTableBody) {
-        console.warn('Products table body not found');
-    }
-    
-    if (!addProductBtn) {
-        console.warn('Add product button not found');
-    }
-    
-    if (!categoriesSelect) {
-        console.warn('Categories select not found');
+    // Check if we need to fix existing products
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('fixniches')) {
+        migrateExistingProducts();
     }
 });
- </script>
+
+</script>
 </body>
 </html>
-

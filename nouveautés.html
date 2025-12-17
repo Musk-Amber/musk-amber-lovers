@@ -1867,7 +1867,7 @@
             <li><a href="javascript:void(0)" onclick="filterByCategory('femme')">Parfums femme</a></li>
             <li><a href="javascript:void(0)" onclick="filterByCategory('homme')">Parfums homme</a></li>
             <li><a href="javascript:void(0)" onclick="filterByCategory('arabes')">Parfum arabes</a></li>
-            <li><a href="javascript:void(0)" onclick="filterByCategory('niches')">Parfum de niche</a></li>
+            <li><a href="javascript:void(0)" onclick="filterByCategory('niche')">Parfum de niche</a></li>
             <li><a href="blog.html">Blog</a></li>
             <li class="dropdown">
                 <a href="nouveautés.html" id="mobile-nouveautes">Nouveautés </i></a>
@@ -2104,7 +2104,7 @@ let productsByType = {
     'femme': [],
     'homme': [],
     'arabes': [],
-    'niches': [], // ADDED: Nouveautés parfums de niches
+    'niche': [], // ADDED: Nouveautés parfums de niches
     'limitees': [],
     'coffrets': []
 };
@@ -2184,7 +2184,7 @@ function addPromotionFilterToMenu() {
             `;
             
             // Insert after the "Parfums de niche" link or before "À propos de nous"
-            const nicheLink = mobileMenuList.querySelector('a[onclick*="filterByCategory(\'niches\')"]');
+            const nicheLink = mobileMenuList.querySelector('a[onclick*="filterByCategory(\'niche\')"]');
             const aboutLink = mobileMenuList.querySelector('a[href="about.html"]');
             
             if (nicheLink) {
@@ -2350,7 +2350,7 @@ function initTabs() {
         { id: 'femme', name: 'Parfums Femme', icon: 'fa-female' },
         { id: 'homme', name: 'Parfums Homme', icon: 'fa-male' },
         { id: 'arabes', name: 'Parfums Arabes', icon: 'fa-mosque' },
-        { id: 'niches', name: 'Parfums de Niche', icon: 'fa-crown' },
+        { id: 'niche', name: 'Parfums de Niche', icon: 'fa-crown' },
         { id: 'coffrets', name: 'Coffrets Cadeaux', icon: 'fa-gift' }
     ];
     
@@ -2504,7 +2504,7 @@ async function loadProductsFromFirebase() {
             'femme': [],
             'homme': [],
             'arabes': [],
-            'niches': [], // ADDED: Parfums de niches
+            'niche': [], // ADDED: Parfums de niches
             'limitees': [],
             'coffrets': []
         };
@@ -2534,7 +2534,7 @@ async function loadProductsFromFirebase() {
                     productsByType.arabes.push(product);
                 } 
                 if (cat.includes('niche') || cat.includes('niches')) { // FIXED: Check for niches
-                    productsByType.niches.push(product);
+                    productsByType.niche.push(product);
                 } 
                 if (cat.includes('limitée') || cat.includes('limitées') || cat.includes('limited')) {
                     productsByType.limitees.push(product);
@@ -2555,7 +2555,7 @@ async function loadProductsFromFirebase() {
                 } else if (type.includes('homme') || type.includes('man')) {
                     productsByType.homme.push(product);
                 } else if (type.includes('niche') || type.includes('niches')) {
-                    productsByType.niches.push(product);
+                    productsByType.niche.push(product);
                 }
             }
         });
@@ -2594,7 +2594,7 @@ async function loadProductsFromFirebase() {
 }
 
 function displayProductsByType() {
-    const types = ['all', 'femme', 'homme', 'arabes', 'niches', 'limitees', 'coffrets'];
+    const types = ['all', 'femme', 'homme', 'arabes', 'niche', 'limitees', 'coffrets'];
     
     types.forEach(type => {
         const containerId = `${type}-products`;
@@ -3268,7 +3268,7 @@ function searchProducts(searchTerm) {
     if (!allProducts || allProducts.length === 0) return;
     
     // Get all product containers
-    const sections = ['all', 'femme', 'homme', 'arabes', 'niches', 'coffrets'];
+    const sections = ['all', 'femme', 'homme', 'arabes', 'niche', 'coffrets'];
     
     sections.forEach(section => {
         const container = document.getElementById(`${section}-products`);
@@ -3394,7 +3394,7 @@ function navigateToCategory(categoryKey) {
 
 // ========== UTILITY FUNCTIONS ==========
 function showEmptyStates() {
-    const sections = ['all', 'femme', 'homme', 'arabes', 'niches', 'limitees', 'coffrets'];
+    const sections = ['all', 'femme', 'homme', 'arabes', 'niche', 'limitees', 'coffrets'];
     
     sections.forEach(section => {
         const container = document.getElementById(`${section}-products`);
@@ -3646,5 +3646,6 @@ document.head.appendChild(styleSheet);
     </script>
 </body>
 </html>
+
 
 
